@@ -660,7 +660,7 @@
 
   <footer class="app-foot">
     Made by <a href="https://draanashah.com" target="_blank" rel="noopener">Dr Aana Shah</a> · built with AI tools · based on Barkley &amp; <em>Mastering Your Adult ADHD</em>
-    <br><a id="footFeedback" href="#">Send feedback</a>
+    <br><a id="footTips" href="#">Print &amp; screen-time tips</a> · <a id="footFeedback" href="#">Send feedback</a>
   </footer>
 </main>
 
@@ -1317,7 +1317,12 @@ focusSelect.onchange = () => { timer.taskId = focusSelect.value; paintFocusTask(
 
 function clampInt(v, min, max, dflt) { v = parseInt(v,10); if (isNaN(v)) v = dflt; return Math.max(min, Math.min(max, v)); }
 
-startPauseBtn.onclick = () => timer.running ? pauseTimer() : startTimer();
+startPauseBtn.onclick = () => {
+  if (timer.running) { pauseTimer(); return; }
+  const wasWork = timer.phase === "work";
+  startTimer();
+  if (wasWork) toast("Timer's running. Put your phone down and go.");   // a launchpad, not a destination
+};
 document.getElementById("resetTimer").onclick = () => {
   pauseTimer();
   timer.remaining = phaseSeconds(timer.phase);
@@ -1560,14 +1565,18 @@ document.getElementById("addReward").onclick = () => openRewardEditor(null);
 
 /* starter reward ideas (tap to add + personalise) */
 const REWARD_SUGGESTIONS = [
-  { name: "A proper coffee or tea break", cost: 20 },
-  { name: "Ten minutes on a game or hobby", cost: 20 },
+  // off-screen first
   { name: "Step outside for fresh air", cost: 15 },
+  { name: "A proper coffee or tea break", cost: 20 },
+  { name: "Ten minutes on a hobby", cost: 20 },
+  { name: "A short walk", cost: 25 },
   { name: "Favourite snack or treat", cost: 40 },
-  { name: "Call or message a friend", cost: 40 },
-  { name: "An episode of a show", cost: 60 },
+  { name: "Meet up with a friend", cost: 50 },
   { name: "Order a takeaway", cost: 100 },
-  { name: "A bigger treat you've wanted", cost: 150 }
+  { name: "A bigger treat you've wanted", cost: 150 },
+  // screen-based last
+  { name: "Ten minutes on a game", cost: 20 },
+  { name: "An episode of a show", cost: 60 }
 ];
 function renderRewardIdeas() {
   const wrap = document.getElementById("rewardIdeas");
@@ -2079,6 +2088,65 @@ function pauseAct(a) {
 }
 
 /* =====================================================================
+   PRINT & SCREEN-TIME TIPS  — v4 (use it off-screen)
+   ===================================================================== */
+function printTaskLines(nodes, depth, out) {
+  nodes.forEach(n => {
+    out.push('<div class="task" style="padding-left:' + (depth * 22) + 'px"><span class="box"></span>' +
+      esc(n.title) + (n.next ? ' <b>(next)</b>' : "") + '</div>');
+    if (n.children && n.children.length) printTaskLines(n.children, depth + 1, out);
+  });
+}
+function buildPrintHTML() {
+  const tk = todayKey();
+  const blocks = (state.dayOverrides[tk] || cloneBlocks(state.template)).slice().sort((a, b) => hmToMin(a.start) - hmToMin(b.start));
+  const today = new Date().toLocaleDateString(undefined, { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+  const blkHTML = blocks.length
+    ? blocks.map(b => '<div class="blk"><div class="t">' + fmt12(b.start) + " to " + fmt12(b.end) + '</div><div><span class="box"></span>' + esc(b.label) + '</div></div>').join("")
+    : '<p class="muted">No blocks set.</p>';
+  let taskHTML = "";
+  PRIORITIES.forEach(p => {
+    const items = state.tasks.filter(n => priOf(n) === p.key);
+    if (!items.length) return;
+    taskHTML += '<div class="pri">' + p.key + " · " + p.label + '</div>';
+    const out = []; printTaskLines(items, 0, out); taskHTML += out.join("");
+  });
+  if (!taskHTML) taskHTML = '<p class="muted">No tasks yet.</p>';
+  return '<!doctype html><html><head><meta charset="utf-8"><title>My day</title><style>' +
+    'body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;color:#1a1a1a;max-width:720px;margin:24px auto;padding:0 22px;line-height:1.5;}' +
+    'h1{font-size:1.6rem;margin:0 0 2px;}.date{color:#666;margin-bottom:18px;}' +
+    'h2{font-size:1.1rem;border-bottom:1px solid #ccc;padding-bottom:5px;margin:26px 0 10px;}' +
+    '.blk{display:flex;gap:12px;padding:7px 0;border-bottom:1px solid #eee;}.blk .t{width:150px;flex-shrink:0;color:#333;}' +
+    '.task{padding:4px 0;}.box{display:inline-block;width:14px;height:14px;border:1.5px solid #555;border-radius:3px;vertical-align:-2px;margin-right:9px;}' +
+    '.pri{font-weight:700;text-transform:uppercase;font-size:.78rem;color:#555;margin:16px 0 6px;}.muted{color:#888;}@media print{body{margin:0;}}' +
+    '</style></head><body><h1>My day</h1><div class="date">' + esc(today) + '</div>' +
+    '<h2>Plan</h2>' + blkHTML + '<h2>Tasks</h2>' + taskHTML +
+    '<p style="margin-top:28px;color:#999;font-size:.78rem;">tools.draanashah.com</p></body></html>';
+}
+function printSheet() {
+  const w = window.open("", "_blank");
+  if (!w) { toast("Allow pop-ups to print"); return; }
+  w.document.write(buildPrintHTML()); w.document.close(); w.focus();
+  setTimeout(() => { try { w.print(); } catch (e) {} }, 350);
+}
+function openTips() {
+  modalHTML("Print & screen-time tips",
+    '<p class="muted small">This works best as a quick launchpad, not somewhere to linger. A few ways to keep screen time down:</p>' +
+    '<button class="btn primary" id="tipsPrint" style="width:100%; margin:6px 0 14px;">Print my plan and tasks</button>' +
+    '<ul style="margin:0 0 14px; padding-left:18px; line-height:1.6; font-size:.92rem; color:var(--ink);">' +
+      '<li>Put the printed plan on a wall or desk and keep the phone away.</li>' +
+      '<li>Pair it with your device\'s own Screen Time or Digital Wellbeing limits.</li>' +
+      '<li>Use it at set times, like a morning plan or before homework, rather than open-ended.</li>' +
+      '<li>For younger children, keep it on a shared or desk device and use it together.</li>' +
+    '</ul>' +
+    '<div class="modal-actions"><button class="btn ghost" id="tipsClose">Close</button></div>',
+    () => {
+      document.getElementById("tipsPrint").onclick = printSheet;
+      document.getElementById("tipsClose").onclick = closeModal;
+    });
+}
+
+/* =====================================================================
    THEME  — v2
    ===================================================================== */
 function applyTheme() {
@@ -2205,6 +2273,7 @@ function renderAll() {
 applyTheme();
 applyPauseDock();
 document.getElementById("footFeedback").href = feedbackHref();
+document.getElementById("footTips").onclick = (e) => { e.preventDefault(); openTips(); };
 initFocusFromState();
 initReminders();
 renderAll();
