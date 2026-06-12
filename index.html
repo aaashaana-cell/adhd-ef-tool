@@ -278,6 +278,39 @@
   .attn-dial { font-size: 2.8rem; font-weight: 700; text-align: center; font-variant-numeric: tabular-nums; color: var(--c-focus); margin: 6px 0; }
   .attn-list { margin: 10px 0; font-size: .9rem; }
   .attn-list span { display: inline-block; background: var(--accent-soft); color: var(--ink); padding: 3px 9px; border-radius: 999px; margin: 0 4px 4px 0; font-weight: 600; }
+  .sol-rate-lbl { display: block; font-size: .82rem; color: var(--muted); font-weight: 600; margin: 12px 0 2px; }
+
+  /* ---------- Pause / urge-surfing tool ---------- */
+  .pause-dock { position: fixed; right: 14px; bottom: calc(90px + env(safe-area-inset-bottom)); z-index: 45; display: flex; align-items: center; gap: 5px; }
+  .pause-fab { background: var(--c-plan); color: #fff; border: none; border-radius: 999px; padding: 11px 18px;
+    font-weight: 700; font-size: .92rem; box-shadow: 0 4px 14px rgba(20,36,27,.22); }
+  .pause-fab:active { transform: scale(.96); }
+  .pause-min { width: 26px; height: 26px; border-radius: 50%; border: none; background: var(--surface); color: var(--muted);
+    box-shadow: 0 2px 8px rgba(20,36,27,.2); font-size: .95rem; line-height: 1; padding: 0; }
+  .pause-restore { position: fixed; right: 0; bottom: calc(112px + env(safe-area-inset-bottom)); z-index: 45; display: none;
+    background: var(--c-plan); color: #fff; border: none; border-radius: 10px 0 0 10px; padding: 10px 6px; font-size: 1.1rem;
+    box-shadow: -2px 2px 10px rgba(20,36,27,.2); }
+  body.pause-hidden .pause-dock { display: none; }
+  body.pause-hidden .pause-restore { display: block; }
+  .pause-overlay { position: fixed; inset: 0; z-index: 60; background: var(--bg); overflow-y: auto; display: none; }
+  .pause-overlay.open { display: block; }
+  .pause-inner { max-width: 560px; margin: 0 auto; padding: 22px 18px calc(30px + env(safe-area-inset-bottom)); min-height: 100%; display: flex; flex-direction: column; }
+  .pause-inner h2 { font-family: "DM Serif Display", Georgia, serif; font-weight: 400; font-size: 1.5rem; margin: 6px 0 4px; }
+  .pause-q { color: var(--muted); font-size: 1rem; margin-bottom: 16px; }
+  .pause-chip { width: 100%; text-align: left; justify-content: flex-start; margin-bottom: 8px; min-height: 50px; }
+  .pause-actions { margin-top: auto; }
+  .pause-actions .btn { width: 100%; margin-bottom: 8px; min-height: 50px; }
+  /* breathing wave orb */
+  .breath-wrap { text-align: center; margin: 18px 0 8px; }
+  .breath-orb { width: 200px; height: 200px; border-radius: 50%; margin: 0 auto;
+    background: radial-gradient(circle at 50% 35%, #cfe5ff 0%, #6fa8e6 55%, #3b82d4 100%);
+    box-shadow: 0 8px 30px rgba(59,130,212,.35); animation: breathe 10s ease-in-out infinite; will-change: transform; }
+  /* 4s inhale (grow) then a longer 6s exhale (shrink) — the longer out-breath is what calms */
+  @keyframes breathe { 0% { transform: scale(.78); } 40% { transform: scale(1.18); } 100% { transform: scale(.78); } }
+  .breath-cue { font-size: 1.25rem; font-weight: 600; color: var(--c-plan); margin: 14px 0 2px; min-height: 1.4em; }
+  .breath-count { font-size: .9rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .breath-line { color: var(--muted); font-size: 1rem; margin: 6px 0 2px; }
+  .pause-vent { width: 100%; min-height: 110px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; font-family: inherit; font-size: 1rem; resize: vertical; }
 
   /* ---------- Focus / Pomodoro ---------- */
   .timer-wrap { text-align: center; padding: 8px 0 4px; }
@@ -631,6 +664,14 @@
   </footer>
 </main>
 
+<!-- ============ Pause / urge-surfing tool ============ -->
+<div class="pause-dock" id="pauseDock">
+  <button class="pause-min" id="pauseMin" aria-label="Hide the pause button" title="Hide">&#10005;</button>
+  <button class="pause-fab" id="pauseBtn">Pause</button>
+</div>
+<button class="pause-restore" id="pauseRestore" aria-label="Show the pause button" title="Show pause">&#8249;</button>
+<div class="pause-overlay" id="pause"><div class="pause-inner" id="pauseBody"></div></div>
+
 <!-- ============ Bottom nav ============ -->
 <nav class="tabs">
   <button data-tab="tasks" class="active"><span class="ic">&#10003;</span>Tasks</button>
@@ -673,14 +714,14 @@ const defaultState = () => ({
     { id: uid(), start: "13:00", end: "13:45", label: "Lunch" }
   ],
   dayOverrides: {},          // { 'YYYY-MM-DD': [blocks] }  -> only when a day is customised  (blocks may carry optional taskId)
-  tasks: [                   // a friendly example so new users see how breakdown works (delete any time)
-    { id: uid(), title: "Buy a house (example, delete me!)", priority: "C", done: false, collapsed: false, children: [
-      { id: uid(), title: "Be able to afford a house", done: false, collapsed: false, children: [] },
-      { id: uid(), title: "Earn a lot of money to be able to afford a house", done: false, collapsed: false, children: [] },
-      { id: uid(), title: "Get a proper job to earn said money", done: false, collapsed: false, children: [] },
-      { id: uid(), title: "Update my CV to get a job", next: true, done: false, collapsed: false, children: [] },
-      { id: uid(), title: "Apply to one job this week", done: false, collapsed: false, children: [] },
-      { id: uid(), title: "Check my credit score", done: false, collapsed: false, children: [] }
+  tasks: [                   // a friendly example so new users see how breakdown works (delete any time). example:true -> earns no points
+    { id: uid(), title: "Buy a house (example, delete me!)", priority: "C", done: false, collapsed: false, example: true, children: [
+      { id: uid(), title: "Be able to afford a house", done: false, collapsed: false, example: true, children: [] },
+      { id: uid(), title: "Earn a lot of money to be able to afford a house", done: false, collapsed: false, example: true, children: [] },
+      { id: uid(), title: "Get a proper job to earn said money", done: false, collapsed: false, example: true, children: [] },
+      { id: uid(), title: "Update my CV to get a job", next: true, done: false, collapsed: false, example: true, children: [] },
+      { id: uid(), title: "Apply to one job this week", done: false, collapsed: false, example: true, children: [] },
+      { id: uid(), title: "Check my credit score", done: false, collapsed: false, example: true, children: [] }
     ] }
   ],
   pomodoro: { workMin: 25, breakMin: 5, longBreakMin: 15, longEvery: 4, autostart: false, chime: true },
@@ -699,7 +740,7 @@ const defaultState = () => ({
   problemSolver: { problem: "", solutions: [], chosenId: "" },  // v3: guided problem solving (single draft)
   parkingLot: [],            // v3: [{ id, text }] distractions parked during a focus session
   attention: { attempts: [] },// v3: recent focus-length samples in seconds
-  settings: { theme: "vibrant", seenGuide: false, reminders: false }   // theme: 'vibrant' | 'calm'
+  settings: { theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false }   // theme: 'vibrant' | 'calm'
 });
 
 let state = load();
@@ -730,7 +771,7 @@ function load() {
     if (!Array.isArray(s.parkingLot)) s.parkingLot = [];
     s.attention = Object.assign({ attempts: [] }, s.attention || {});
     if (!Array.isArray(s.attention.attempts)) s.attention.attempts = [];
-    s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false }, s.settings || {});
+    s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false }, s.settings || {});
     return s;
   } catch (e) { return defaultState(); }
 }
@@ -927,7 +968,7 @@ function toggleBlockDone(id, checked) {
   const b = list.find(x => x.id === id);
   if (!b) return;
   b.done = checked;
-  addPoints(checked ? state.rewards.earn.block : -state.rewards.earn.block, checked ? "Finished a time block" : "Unchecked a block");
+  if (checked && !b._awarded) { b._awarded = true; addPoints(state.rewards.earn.block, "Finished a time block"); }  // award once; unticking never removes points
   save(); renderPlanner();
 }
 
@@ -1091,8 +1132,8 @@ function renderNode(node, depth) {
   row.querySelector(".pri-badge").onclick = () => openPriorityPicker(node, false);
   const chk = row.querySelector(".chk");
   chk.onchange = () => {
-    const delta = setDone(node, chk.checked);
-    if (delta !== 0) addPoints(delta * state.rewards.earn.taskDone, (delta > 0 ? "Completed a task" : "Unchecked a task"));
+    setDone(node, chk.checked);
+    if (chk.checked) awardTaskCompletion(node);   // award once per leaf; unticking never removes points
     save(); renderTasks(); refreshFocusTaskOptions();
   };
   row.querySelector(".star").onclick = () => toggleNext(node);
@@ -1169,6 +1210,17 @@ function setDone(node, val) {
   let delta = 0;
   node.children.forEach(c => { delta += setDone(c, val); });
   return delta;
+}
+/* award points once per leaf the first time it's completed; never for example tasks,
+   never removed on untick, never re-awarded on re-tick (prevents toggle-farming) */
+function awardTaskCompletion(node) {
+  const award = (n) => {
+    const leaf = !n.children || !n.children.length;
+    if (leaf) {
+      if (n.done && !n._awarded && !n.example) { n._awarded = true; addPoints(state.rewards.earn.taskDone, "Completed a task"); }
+    } else { n.children.forEach(award); }
+  };
+  award(node);
 }
 function openTaskEditor(editId, parentId) {
   const existing = editId ? findNode(editId).node : null;
@@ -1721,12 +1773,12 @@ function renderSolver() {
     '<div class="solver-step-lbl">Step 1. Name the problem</div>' +
     '<p class="solver-q">In a sentence or two, what is it?</p>' +
     '<textarea id="psProblem" rows="2" placeholder="e.g. I can’t decide how to start saving">' + esc(ps.problem) + '</textarea>' +
-    '<div class="solver-step-lbl">Steps 2 &amp; 3. Options, and their pros &amp; cons</div>' +
-    '<p class="solver-q">List anything that could work, don’t judge yet. Then weigh each one and rate it out of 10.</p>' +
+    '<div class="solver-step-lbl">Steps 2 &amp; 3. Possible solutions</div>' +
+    '<p class="solver-q">List any solution that could work, don’t judge yet. Then weigh each one with its pros and cons, and rate how good it is out of 10.</p>' +
     '<div id="solList"></div>' +
-    '<button class="btn" id="psAdd" style="width:100%; margin:4px 0 8px;">+ Add an option</button>' +
+    '<button class="btn" id="psAdd" style="width:100%; margin:4px 0 8px;">+ Add a solution</button>' +
     '<div class="solver-step-lbl">Step 4. Pick one</div>' +
-    '<p class="solver-q">Choose the option to go with (the highest-rated is a good default). ' + (ctx ? "It becomes a step under your goal." : "It becomes a task you can act on.") + '</p>' +
+    '<p class="solver-q">Choose the solution to go with (the highest-rated is a good default). ' + (ctx ? "It becomes a step under your goal." : "It becomes a task you can act on.") + '</p>' +
     '<div class="modal-actions" style="flex-direction:column; margin-top:6px;">' +
       '<button class="btn primary" id="psToTasks">' + (ctx ? "Add my choice as a step" : "Add my choice to Tasks") + '</button>' +
       '<button class="btn ghost" id="psClear" style="color:var(--now);">Clear this worksheet</button>' +
@@ -1756,10 +1808,11 @@ function renderSolList() {
     const card = document.createElement("div");
     card.className = "sol-card" + (ps.chosenId === s.id ? " chosen" : "");
     card.innerHTML =
-      '<div class="sol-top"><input type="text" class="s-text" placeholder="Option ' + (i+1) + '" value="' + esc(s.text) + '">' +
+      '<div class="sol-top"><input type="text" class="s-text" placeholder="Solution ' + (i+1) + '" value="' + esc(s.text) + '">' +
         '<button class="btn icon ghost s-del" aria-label="Remove">&#10005;</button></div>' +
       '<div class="sol-pc"><div class="field"><label>Pros</label><input type="text" class="s-pros" value="' + esc(s.pros) + '"></div>' +
         '<div class="field"><label>Cons</label><input type="text" class="s-cons" value="' + esc(s.cons) + '"></div></div>' +
+      '<label class="sol-rate-lbl">How good is this solution? Rate it out of 10.</label>' +
       '<div class="sol-rate"><span class="muted small">Poor</span><input type="range" class="s-rate" min="1" max="10" value="' + s.rating + '"><span class="muted small">Great</span><span class="rv">' + s.rating + '/10</span></div>' +
       '<label class="sol-pick"><input type="radio" name="psPick" class="s-pick"' + (ps.chosenId === s.id ? " checked" : "") + '> This is my pick</label>';
     card.querySelector(".s-text").addEventListener("input", e => { s.text = e.target.value; save(); });
@@ -1775,7 +1828,7 @@ function renderSolList() {
 function solverToTasks() {
   const ps = state.problemSolver;
   const chosen = ps.solutions.find(s => s.id === ps.chosenId) || ps.solutions[0];
-  if (!chosen || !chosen.text.trim()) { toast("Add and pick an option first"); return; }
+  if (!chosen || !chosen.text.trim()) { toast("Add and pick a solution first"); return; }
   const newNode = { id: uid(), title: chosen.text.trim(), done: false, collapsed: false, priority: "A", children: [] };
   const ctx = solverContext ? findNode(solverContext) : null;
   let msg;
@@ -1925,6 +1978,107 @@ function initReminders() {
 }
 
 /* =====================================================================
+   PAUSE / urge-surfing tool  — v4 (in-the-moment impulse delay)
+   ===================================================================== */
+const URGES = [
+  { key: "spend",   label: "Spend money" },
+  { key: "switch",  label: "Switch to something else" },
+  { key: "quit",    label: "Quit something" },
+  { key: "message", label: "Send a heated message" },
+  { key: "other",   label: "Something else" }
+];
+const pauseEl = document.getElementById("pause");
+const pauseBody = document.getElementById("pauseBody");
+let pauseUrge = null, pauseTimerId = null, pauseCueId = null, pauseLeft = 0;
+document.getElementById("pauseBtn").onclick = openPause;
+/* minimize the floating button to a small edge tab (remembered) */
+function applyPauseDock() { document.body.classList.toggle("pause-hidden", !!state.settings.pauseHidden); }
+document.getElementById("pauseMin").onclick = () => { state.settings.pauseHidden = true; save(); applyPauseDock(); };
+document.getElementById("pauseRestore").onclick = () => { state.settings.pauseHidden = false; save(); applyPauseDock(); };
+function openPause() { pauseUrge = null; pauseEl.classList.add("open"); pauseEl.scrollTop = 0; renderPauseName(); }
+function closePause() { clearInterval(pauseTimerId); clearInterval(pauseCueId); pauseEl.classList.remove("open"); }
+function pauseHeader(title, q) {
+  return '<div class="row" style="align-items:flex-start;"><h2 style="flex:1;">' + title + '</h2>' +
+    '<button class="btn ghost sm" id="pauseClose">Close</button></div>' + (q ? '<p class="pause-q">' + q + '</p>' : "");
+}
+function wirePauseClose() { document.getElementById("pauseClose").onclick = closePause; }
+
+function renderPauseName() {
+  pauseBody.innerHTML = pauseHeader("Pause for a moment", "What do you feel the urge to do right now?") +
+    URGES.map(u => '<button class="btn pause-chip" data-k="' + u.key + '">' + u.label + '</button>').join("");
+  wirePauseClose();
+  pauseBody.querySelectorAll(".pause-chip").forEach(b => b.onclick = () => { pauseUrge = b.dataset.k; renderPauseBreathe(); });
+}
+function renderPauseBreathe() {
+  pauseLeft = 60;
+  pauseBody.innerHTML = pauseHeader("Ride it out", "Urges peak and pass. Surf this one like a wave.") +
+    '<div class="breath-wrap"><div class="breath-orb"></div>' +
+    '<div class="breath-cue" id="breathCue">Breathe in…</div><div class="breath-count" id="breathCount"></div></div>' +
+    '<div class="pause-actions"><button class="btn primary" id="pauseNext">I’m ready</button></div>';
+  wirePauseClose();
+  document.getElementById("pauseNext").onclick = () => { clearInterval(pauseTimerId); clearInterval(pauseCueId); renderPauseReflect(); };
+  const cueEl = document.getElementById("breathCue"), countEl = document.getElementById("breathCount");
+  // 4s in, then a longer 6s out, matching the orb animation
+  const cueLoop = () => {
+    cueEl.textContent = "Breathe in…";
+    pauseCueId = setTimeout(() => {
+      cueEl.textContent = "Breathe out…";
+      pauseCueId = setTimeout(cueLoop, 6000);
+    }, 4000);
+  };
+  cueLoop();
+  const tick = () => {
+    countEl.textContent = pauseLeft + "s";
+    if (pauseLeft <= 0) { clearInterval(pauseTimerId); clearInterval(pauseCueId); renderPauseReflect(); return; }
+    pauseLeft--;
+  };
+  tick(); pauseTimerId = setInterval(tick, 1000);
+}
+function renderPauseReflect() {
+  pauseBody.innerHTML = pauseHeader("Before you act", "What's the cost if you act on this right now?") +
+    '<textarea id="pauseVent" class="pause-vent" placeholder="Jot it down if you like (not saved)…"></textarea>' +
+    '<div class="pause-actions"><button class="btn primary" id="pauseToChoice">Continue</button></div>';
+  wirePauseClose();
+  document.getElementById("pauseToChoice").onclick = renderPauseChoose;
+}
+function renderPauseChoose() {
+  let html, acts = [];
+  if (pauseUrge === "spend") {
+    html = pauseHeader("Your choice", "You've made space. Now decide on purpose.");
+    acts = [["letgo", "accent", "Let it go for now"], ["wait", "", "Wait 24 hours, then decide"]];
+  } else if (pauseUrge === "switch") {
+    html = pauseHeader("Your choice", "You've made space. Now decide on purpose.") +
+      '<input id="pausePark" type="text" placeholder="What was pulling you away?" style="width:100%;min-height:44px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;margin-bottom:10px;">';
+    acts = [["park", "accent", "Park it and carry on"], ["letgo", "", "Back to what I was doing"]];
+  } else if (pauseUrge === "quit") {
+    html = pauseHeader("Your choice", "You've made space. Now decide on purpose.");
+    acts = [["five", "accent", "Do 5 more minutes, then decide"], ["letgo", "", "Step away for now"]];
+  } else if (pauseUrge === "message") {
+    html = pauseHeader("Say it here, don't send", "Get it out here instead. This isn't sent anywhere.") +
+      '<textarea id="pauseVent" class="pause-vent" placeholder="Type what you want to say…"></textarea>';
+    acts = [["letgo", "accent", "Done. I won’t send it"]];
+  } else {
+    html = pauseHeader("Your choice", "You've made space. Now decide on purpose.");
+    acts = [["letgo", "accent", "Let it go"], ["park", "", "Park it for later"]];
+  }
+  html += '<div class="pause-actions">' + acts.map(a => '<button class="btn ' + a[1] + '" data-a="' + a[0] + '">' + a[2] + '</button>').join("") + '</div>';
+  pauseBody.innerHTML = html;
+  wirePauseClose();
+  pauseBody.querySelectorAll(".pause-actions .btn").forEach(b => b.onclick = () => pauseAct(b.dataset.a));
+}
+function pauseAct(a) {
+  if (a === "park") {
+    const inp = document.getElementById("pausePark");
+    const txt = inp ? inp.value.trim() : "";
+    if (txt) { state.parkingLot.push({ id: uid(), text: txt }); save(); renderParking(); }
+    toast(txt ? "Parked. Back to it." : "Back to it.");
+  } else if (a === "wait") { toast("Good call. If you still want it tomorrow, it'll be there.");
+  } else if (a === "five") { toast("Five more minutes. You can decide after.");
+  } else { toast("Nice, you paused. The urge will pass."); }
+  closePause();
+}
+
+/* =====================================================================
    THEME  — v2
    ===================================================================== */
 function applyTheme() {
@@ -2049,6 +2203,7 @@ function renderAll() {
   renderRewards(); renderIfThen(); renderBuddy(); renderParking();
 }
 applyTheme();
+applyPauseDock();
 document.getElementById("footFeedback").href = feedbackHref();
 initFocusFromState();
 initReminders();
