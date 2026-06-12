@@ -212,6 +212,14 @@
   .cat-swatch.on { border-color: var(--ink); box-shadow: 0 0 0 3px var(--accent-soft); }
   .remind-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: .9rem; color: var(--muted); }
   .remind-row .chk { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--primary); }
+  .rest-nudge { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--accent-soft); color: var(--ink); font-size: .9rem; line-height: 1.45; }
+  .rest-nudge .rest-text { flex: 1; }
+  .rest-nudge .rest-add { display: inline-block; margin-top: 4px; background: none; border: none; color: var(--accent); font-weight: 700; font-size: .9rem; cursor: pointer; padding: 0; }
+  .rest-nudge .rest-dismiss { flex-shrink: 0; background: none; border: none; color: var(--muted); font-size: 1rem; line-height: 1; cursor: pointer; padding: 2px 4px; }
+  .wrap-line { font-size: 1.05rem; line-height: 1.5; margin: 0 0 12px; }
+  .wrap-wins { list-style: none; margin: 4px 0 16px; padding: 0; }
+  .wrap-wins li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 1rem; }
+  .wrap-wins .n { font-weight: 700; color: var(--accent); font-size: 1.2rem; min-width: 30px; }
   .block .time {
     width: 82px; flex-shrink: 0; font-variant-numeric: tabular-nums; font-weight: 600;
     font-size: .85rem; color: var(--ink); white-space: nowrap; line-height: 1.3; text-align: left;
@@ -533,11 +541,17 @@
 
     <div class="blocks" id="blocks"></div>
 
+    <div class="rest-nudge" id="restNudge" style="display:none;">
+      <div class="rest-text">No downtime planned today. Even a short rest block helps you keep going. <button class="rest-add" id="restAdd">Add a rest block</button></div>
+      <button class="rest-dismiss" id="restDismiss" aria-label="Dismiss" title="Dismiss for today">&#10005;</button>
+    </div>
+
     <div class="row" style="margin-top:6px;">
       <button class="btn primary" id="addBlock" style="flex:1;">+ Add block</button>
       <button class="btn ghost" id="resetDay" title="Reset today to routine">Reset to routine</button>
     </div>
     <label class="remind-row"><input type="checkbox" id="remindToggle" class="chk"> <span>Remind me when a block starts or ends (while this page is open)</span></label>
+    <button class="btn" id="wrapUpBtn" style="width:100%; margin-top:14px; background:var(--c-buddy); color:#fff; border:none;">Done for today</button>
   </section>
 
   <!-- ============ TASKS (master planner) ============ -->
@@ -755,7 +769,7 @@ const defaultState = () => ({
   problemSolver: { problem: "", solutions: [], chosenId: "" },  // v3: guided problem solving (single draft)
   parkingLot: [],            // v3: [{ id, text }] distractions parked during a focus session
   attention: { attempts: [] },// v3: recent focus-length samples in seconds
-  settings: { theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false }   // theme: 'vibrant' | 'calm'
+  settings: { theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "" }   // theme: 'vibrant' | 'calm'
 });
 
 let state = load();
@@ -786,7 +800,7 @@ function load() {
     if (!Array.isArray(s.parkingLot)) s.parkingLot = [];
     s.attention = Object.assign({ attempts: [] }, s.attention || {});
     if (!Array.isArray(s.attention.attempts)) s.attention.attempts = [];
-    s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false }, s.settings || {});
+    s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "" }, s.settings || {});
     return s;
   } catch (e) { return defaultState(); }
 }
@@ -938,6 +952,11 @@ function renderPlanner() {
     blocksEl.appendChild(el);
   });
 
+  // gentle nudge to protect recharge time (today view, has blocks, but no rest block)
+  const restNudge = document.getElementById("restNudge");
+  const restOK = isToday && list.length && !hasRestBlock(list) && state.settings.restNudgeDismissed !== todayKey();
+  restNudge.style.display = restOK ? "flex" : "none";
+
   renderCurrentBanner(list, isToday, now);
 }
 
@@ -1040,6 +1059,40 @@ function suggestNextStart(list) {
   if (!list.length) return "09:00";
   const latest = list.reduce((mx,b) => Math.max(mx, hmToMin(b.end)), 0);
   return minToHM(Math.min(latest, 1410));
+}
+/* does today have any downtime? rest category, or a rest-ish label */
+function hasRestBlock(list) {
+  return list.some(b => b.cat === "break" || /\b(rest|break|lunch|relax|recharge|nap|walk|downtime|chill)\b/i.test(b.label || ""));
+}
+document.getElementById("restAdd").onclick = () => openBlockEditor(null);
+document.getElementById("restDismiss").onclick = () => { state.settings.restNudgeDismissed = todayKey(); save(); document.getElementById("restNudge").style.display = "none"; };
+document.getElementById("wrapUpBtn").onclick = openWrapUp;
+
+/* end-of-day wrap-up: what you did, permission to stop, carries over, recharge */
+function todayWins() {
+  const t = todayKey(), start = keyToDate(t).getTime(), end = start + 86400000;
+  const led = state.rewards.ledger.filter(e => e.ts >= start && e.ts < end && e.amount > 0);
+  const c = lbl => led.filter(e => e.label === lbl).length;
+  return { tasks: c("Completed a task"), focus: c("Focus session"), blocks: c("Finished a time block"), ifThen: c("Followed an if-then plan") };
+}
+function openWrapUp() {
+  const w = todayWins();
+  const rows = [];
+  if (w.tasks)  rows.push([w.tasks, w.tasks === 1 ? "task done" : "tasks done"]);
+  if (w.blocks) rows.push([w.blocks, w.blocks === 1 ? "time block finished" : "time blocks finished"]);
+  if (w.focus)  rows.push([w.focus, w.focus === 1 ? "focus session" : "focus sessions"]);
+  if (w.ifThen) rows.push([w.ifThen, w.ifThen === 1 ? "if-then plan followed" : "if-then plans followed"]);
+  const anything = rows.length > 0;
+  const winsHTML = anything
+    ? '<p class="wrap-line">Today you got through:</p><ul class="wrap-wins">' +
+        rows.map(r => '<li><span class="n">' + r[0] + '</span>' + r[1] + '</li>').join("") + '</ul>'
+    : '<p class="wrap-line">You didn\'t tick much off today, and that\'s completely fine. Some days are like that, and showing up still counts.</p>';
+  modalHTML("Done for today",
+    winsHTML +
+    '<p class="wrap-line">That\'s a good day\'s work. Whatever you didn\'t get to carries over to tomorrow, and there will always be more to do than fits in one day. That\'s okay.</p>' +
+    '<p class="wrap-line">Now close this, step away, and let yourself recharge.</p>' +
+    '<div class="modal-actions"><button class="btn primary" id="wrapDone" style="flex:1;">Goodnight</button><button class="btn ghost" id="wrapMore" style="flex:1;">Keep going</button></div>',
+    () => { document.getElementById("wrapDone").onclick = closeModal; document.getElementById("wrapMore").onclick = closeModal; });
 }
 
 /* =====================================================================
