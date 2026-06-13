@@ -1080,7 +1080,7 @@ function openWrapUp() {
   const winsHTML = anything
     ? '<p class="wrap-line">Today you got through:</p><ul class="wrap-wins">' +
         rows.map(r => '<li><span class="n">' + r[0] + '</span>' + r[1] + '</li>').join("") + '</ul>'
-    : '<p class="wrap-line">You didn\'t tick much off today, and that\'s completely fine. Some days are like that, and showing up still counts.</p>';
+    : '<p class="wrap-line">You didn\'t tick much off today, but no worries. Some days are just like that.</p>';
   modalHTML("Done for today",
     winsHTML +
     '<p class="wrap-line">That\'s a good day\'s work. Whatever you didn\'t get to carries over to tomorrow, and there will always be more to do than fits in one day.</p>' +
