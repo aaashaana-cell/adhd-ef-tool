@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Medication tracker | Dr Aana Shah</title>
+<meta name="description" content="A simple daily ADHD medication and symptom tracker. Stays on your device, exports a spreadsheet to bring to your reviews. By Dr Aana Shah.">
+<link rel="canonical" href="https://tools.draanashah.com/medication-tracker.html">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+  .lead-note{background:var(--warn-soft); border-radius:12px; padding:13px 16px; margin-bottom:24px;
+    font-size:.9rem; line-height:1.5; color:#7a4f24;}
+  .lead-note b{color:#5e3c1b;}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 16px; margin-bottom:20px;}
+  .card h2{margin-top:0;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px 14px;}
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field.full{grid-column:1 / -1;}
+  label{font-size:.8rem; font-weight:600; color:var(--muted);}
+  input,select,textarea{font-family:inherit; font-size:1rem; color:var(--ink);
+    border:1px solid var(--line); border-radius:9px; padding:9px 10px; background:#fff; width:100%;}
+  textarea{resize:vertical; min-height:54px;}
+  .sidefx{display:flex; flex-wrap:wrap; gap:8px 16px; padding-top:2px;}
+  .sidefx label{display:flex; align-items:center; gap:6px; font-weight:500; color:var(--ink); font-size:.95rem;}
+  .sidefx input{width:auto;}
+  .optional summary{cursor:pointer; font-size:.85rem; font-weight:600; color:var(--primary); padding:4px 0;}
+  .btnrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .btn{font-family:inherit; font-weight:700; font-size:.92rem; border-radius:999px; padding:11px 20px; cursor:pointer; border:1px solid transparent;}
+  .btn.primary{background:var(--primary); color:#fff;}
+  .btn.primary:hover{background:var(--primary-dark);}
+  .btn.ghost{background:#fff; color:var(--ink); border-color:var(--line);}
+  .btn.ghost:hover{border-color:var(--primary);}
+  .tablewrap{overflow-x:auto; -webkit-overflow-scrolling:touch; border:1px solid var(--line); border-radius:12px;}
+  table{border-collapse:collapse; width:100%; font-size:.86rem; min-width:680px;}
+  th,td{text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  th{background:var(--soft); font-weight:700; color:var(--primary-dark); position:sticky; top:0;}
+  td.note{white-space:normal; min-width:160px;}
+  tr:last-child td{border-bottom:none;}
+  .del{background:none; border:none; color:#c0403f; cursor:pointer; font-size:1rem; font-weight:700;}
+  .empty{color:var(--muted); font-size:.92rem; padding:18px 4px;}
+  @media (max-width:560px){ .grid{grid-template-columns:1fr;} }
+  @media print{ .card .grid, .btnrow, .lead-note, .del{display:none !important;} th{position:static;} }
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="topbar">
+    <span class="kicker">Dr Aana Shah</span>
+    <a class="backlink" href="/">&#8592; Back to the tool</a>
+  </div>
+
+  <h1>Medication tracker</h1>
+  <p class="lead">A simple daily record of how you are doing on medication. It stays on your device, and you can export it as a spreadsheet to bring to your reviews.</p>
+
+  <div class="lead-note">
+    <b>Please read:</b> this is a personal record to share with your doctor, not medical advice. It is not a reason to change, start, or stop your medication on your own. Always follow your doctor's guidance on dosing. Nothing you enter here leaves your device.
+  </div>
+
+  <div class="card">
+    <h2>Add today's entry</h2>
+    <div class="grid">
+      <div class="field"><label for="date">Date</label><input type="date" id="date"></div>
+      <div class="field"><label for="meds">Medication and doses taken</label><input type="text" id="meds" placeholder="e.g. 10mg SR morning, 5mg IR afternoon"></div>
+      <div class="field full"><label for="workload">Workload and demands today</label><input type="text" id="workload" placeholder="e.g. high - presentation and travel"></div>
+
+      <div class="field"><label for="focus">Focus</label>
+        <select id="focus"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Poor</option><option>Very poor</option></select></div>
+      <div class="field"><label for="mood">Mood</label>
+        <select id="mood"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Low</option><option>Very low</option></select></div>
+      <div class="field"><label for="exec">Getting things done</label>
+        <select id="exec"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Hard</option><option>Very hard</option></select></div>
+      <div class="field"><label for="irrit">Irritability or anger</label>
+        <select id="irrit"><option value="">&mdash;</option><option>None</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></div>
+      <div class="field"><label for="anx">Anxiety</label>
+        <select id="anx"><option value="">&mdash;</option><option>None</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></div>
+      <div class="field"><label for="sleep">Sleep</label>
+        <select id="sleep"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Poor</option><option>Very poor</option></select></div>
+      <div class="field"><label for="appetite">Appetite</label>
+        <select id="appetite"><option value="">&mdash;</option><option>Normal</option><option>Reduced</option><option>Increased</option><option>Poor</option></select></div>
+
+      <div class="field full"><label>Side effects noticed</label>
+        <div class="sidefx">
+          <label><input type="checkbox" id="sfHeadache"> Headache</label>
+          <label><input type="checkbox" id="sfPalp"> Palpitations</label>
+          <label><input type="checkbox" id="sfNausea"> Nausea</label>
+          <label><input type="checkbox" id="sfDry"> Dry mouth</label>
+        </div>
+      </div>
+      <div class="field full"><label for="sfOther">Other side effects</label><input type="text" id="sfOther" placeholder="anything else you noticed"></div>
+
+      <div class="field full">
+        <details class="optional"><summary>Optional measurements (blood pressure, heart rate)</summary>
+          <div class="grid" style="margin-top:10px;">
+            <div class="field"><label for="bp">Blood pressure</label><input type="text" id="bp" placeholder="e.g. 122/78"></div>
+            <div class="field"><label for="hr">Heart rate</label><input type="text" id="hr" placeholder="e.g. 72 bpm"></div>
+          </div>
+        </details>
+      </div>
+
+      <div class="field full"><label for="notes">Notes</label><textarea id="notes" placeholder="anything worth remembering for your review"></textarea></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn primary" id="saveBtn">Save entry</button>
+      <button class="btn ghost" id="clearBtn">Clear form</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Your log</h2>
+    <div id="tableArea"></div>
+    <div class="btnrow">
+      <button class="btn primary" id="exportBtn">Export spreadsheet (CSV)</button>
+      <button class="btn ghost" onclick="window.print()">Print</button>
+    </div>
+  </div>
+
+  <nav class="docnav">
+    <div class="docnav-title">More from Dr Aana Shah</div>
+    <a href="understanding-adhd.html">Understanding ADHD: what your diagnosis means<span>A plain-language guide for the person with ADHD</span></a>
+    <a href="your-report.html">Making sense of your assessment report<span>How your report is organised and what to do with it</span></a>
+    <a href="/">The planning and focus tool<span>Plan the day, break tasks down, focus in short bursts</span></a>
+  </nav>
+  <p class="pagefoot">Made by <a href="https://draanashah.com" rel="noopener">Dr Aana Shah</a> &middot; <a href="/">tools.draanashah.com</a></p>
+</div>
+
+<script>
+"use strict";
+var KEY="medTracker.v1";
+var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
+var COLS=[
+  ["date","Date"],["day","Day"],["meds","Medication and doses"],["workload","Workload/demands"],
+  ["focus","Focus"],["mood","Mood"],["exec","Getting things done"],["irrit","Irritability/anger"],
+  ["anx","Anxiety"],["sleep","Sleep"],["appetite","Appetite"],["sidefx","Side effects"],
+  ["bp","Blood pressure"],["hr","Heart rate"],["notes","Notes"]
+];
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ return []; } }
+function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
+function dayName(iso){ if(!iso) return ""; var p=iso.split("-"); var dt=new Date(+p[0],+p[1]-1,+p[2]); return DAYS[dt.getDay()]||""; }
+function fmtDate(iso){ if(!iso) return ""; var p=iso.split("-"); return p[2]+"/"+p[1]+"/"+p[0]; }
+var $=function(id){ return document.getElementById(id); };
+
+function todayISO(){ var d=new Date(); var m=("0"+(d.getMonth()+1)).slice(-2); var day=("0"+d.getDate()).slice(-2); return d.getFullYear()+"-"+m+"-"+day; }
+$("date").value=todayISO();
+
+function collectSideFx(){
+  var fx=[];
+  if($("sfHeadache").checked) fx.push("Headache");
+  if($("sfPalp").checked) fx.push("Palpitations");
+  if($("sfNausea").checked) fx.push("Nausea");
+  if($("sfDry").checked) fx.push("Dry mouth");
+  var o=$("sfOther").value.trim(); if(o) fx.push(o);
+  return fx.join("; ");
+}
+function clearForm(){
+  ["meds","workload","focus","mood","exec","irrit","anx","sleep","appetite","sfOther","bp","hr","notes"].forEach(function(id){ $(id).value=""; });
+  ["sfHeadache","sfPalp","sfNausea","sfDry"].forEach(function(id){ $(id).checked=false; });
+  $("date").value=todayISO();
+}
+function addEntry(){
+  var iso=$("date").value;
+  if(!iso){ alert("Please pick a date."); return; }
+  var entry={
+    id:Date.now(), date:iso, day:dayName(iso),
+    meds:$("meds").value.trim(), workload:$("workload").value.trim(),
+    focus:$("focus").value, mood:$("mood").value, exec:$("exec").value,
+    irrit:$("irrit").value, anx:$("anx").value, sleep:$("sleep").value, appetite:$("appetite").value,
+    sidefx:collectSideFx(), bp:$("bp").value.trim(), hr:$("hr").value.trim(), notes:$("notes").value.trim()
+  };
+  var data=load();
+  data.push(entry);
+  data.sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:b.id-a.id); });
+  save(data); render(); clearForm();
+}
+function del(id){
+  var data=load().filter(function(e){ return e.id!==id; });
+  save(data); render();
+}
+function render(){
+  var data=load(); var area=$("tableArea");
+  area.textContent="";
+  if(!data.length){ var p=document.createElement("div"); p.className="empty"; p.textContent="No entries yet. Add today's entry above to begin."; area.appendChild(p); return; }
+  var wrap=document.createElement("div"); wrap.className="tablewrap";
+  var t=document.createElement("table");
+  var thead=document.createElement("thead"); var hr=document.createElement("tr");
+  COLS.forEach(function(c){ var th=document.createElement("th"); th.textContent=c[1]; hr.appendChild(th); });
+  var thx=document.createElement("th"); thx.textContent=""; hr.appendChild(thx);
+  thead.appendChild(hr); t.appendChild(thead);
+  var tb=document.createElement("tbody");
+  data.forEach(function(e){
+    var tr=document.createElement("tr");
+    COLS.forEach(function(c){
+      var td=document.createElement("td");
+      var v = c[0]==="date" ? fmtDate(e.date) : (e[c[0]]||"");
+      td.textContent=v;
+      if(c[0]==="notes"||c[0]==="sidefx"||c[0]==="workload") td.className="note";
+      tr.appendChild(td);
+    });
+    var tdx=document.createElement("td");
+    var b=document.createElement("button"); b.className="del"; b.textContent="×"; b.title="Delete this entry";
+    b.onclick=function(){ if(confirm("Delete this entry?")) del(e.id); };
+    tdx.appendChild(b); tr.appendChild(tdx);
+    tb.appendChild(tr);
+  });
+  t.appendChild(tb); wrap.appendChild(t); area.appendChild(wrap);
+}
+function csvCell(s){ s=(s==null?"":String(s)); if(/[",\n]/.test(s)){ s='"'+s.replace(/"/g,'""')+'"'; } return s; }
+function exportCSV(){
+  var data=load();
+  if(!data.length){ alert("Nothing to export yet."); return; }
+  var rows=[COLS.map(function(c){ return c[1]; }).join(",")];
+  data.slice().reverse().forEach(function(e){
+    rows.push(COLS.map(function(c){ return csvCell(c[0]==="date"?fmtDate(e.date):e[c[0]]); }).join(","));
+  });
+  var blob=new Blob(["﻿"+rows.join("\r\n")], {type:"text/csv;charset=utf-8;"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a");
+  a.href=url; a.download="medication-tracker-"+todayISO()+".csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+$("saveBtn").onclick=addEntry;
+$("clearBtn").onclick=clearForm;
+$("exportBtn").onclick=exportCSV;
+render();
+</script>
+<script data-goatcounter="https://draanashah.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
