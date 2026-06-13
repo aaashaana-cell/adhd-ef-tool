@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#2f9e72">
 <title>ADHD planner &amp; focus tool | Dr Aana Shah</title>
 <meta name="description" content="A free, private tool to help an adult ADHD brain plan the day, break big tasks into small steps, focus in short bursts, and follow through. No sign-up, works on your phone.">
@@ -28,7 +28,7 @@
     --bg: #eef2ef;
     --surface: #ffffff;
     --ink: #202a25;            /* soft dark green-grey */
-    --muted: #69726b;
+    --muted: #5f6860;
     --line: #dde5e0;
     --primary: #2f9e72;        /* soft jade green: brand + primary actions */
     --primary-dark: #257e5b;
@@ -58,7 +58,7 @@
     --bg: #efede9;
     --surface: #faf9f7;
     --ink: #26282c;
-    --muted: #70737a;
+    --muted: #62656b;
     --line: #d9d6d1;
     --primary: #2f3338;
     --primary-dark: #1f2225;
@@ -117,6 +117,15 @@
   .tab-panel { display: none; }
   .tab-panel.active { display: block; animation: fade .18s ease; }
   @keyframes fade { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: none; } }
+
+  /* ---------- Accessibility ---------- */
+  /* visible keyboard focus ring (blue stands apart from the green/gold palette and shows on every surface) */
+  :focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+  /* respect reduced-motion: drop incidental animation; the opt-in breathing orb stays, as its motion is the exercise */
+  @media (prefers-reduced-motion: reduce) {
+    .tab-panel.active, .ring.running .inner, .pop, .modal { animation: none !important; }
+    * { transition-duration: .001ms !important; }
+  }
 
   .card {
     background: var(--surface); border: 1px solid var(--line);
@@ -264,6 +273,9 @@
   .pri-badge.A { background: var(--pri-a); }
   .pri-badge.B { background: var(--pri-b); }
   .pri-badge.C { background: var(--pri-c); }
+  /* dark text on the bright Vibrant gold/grey badges (white on them is unreadable) */
+  .pri-badge.B, .pri-badge.C { color: var(--ink); }
+  :root[data-theme="calm"] .pri-badge.B { color: #fff; }
 
   /* tasks help legend */
   .legend-toggle { color: var(--muted); padding-left: 0; margin-bottom: 6px; }
@@ -932,7 +944,7 @@ function renderPlanner() {
     if (b.cat) el.style.setProperty("--cat", catColor(b.cat));
     el.innerHTML =
       (b.cat ? '<span class="cat-bar" style="background:' + catColor(b.cat) + ';"></span>' : '') +
-      (showChk ? '<input type="checkbox" class="blk-chk"' + (b.done ? " checked" : "") + '>' : '') +
+      (showChk ? '<input type="checkbox" class="blk-chk" aria-label="Mark this block done"' + (b.done ? " checked" : "") + '>' : '') +
       '<div class="time">' + fmt12(b.start) + '<div class="to">to ' + fmt12(b.end) + '</div></div>' +
       '<div class="lbl"><span class="lbl-main"></span>' + chip + '</div>' +
       '<div class="acts">' +
@@ -1177,9 +1189,9 @@ function renderNode(node, depth) {
   const row = document.createElement("div");
   row.className = "node-row";
   row.innerHTML =
-    '<button class="twisty' + (hasKids ? "" : " hidden") + '">' + (node.collapsed ? "▸" : "▾") + '</button>' +
+    '<button class="twisty' + (hasKids ? "" : " hidden") + '" aria-label="' + (node.collapsed ? "Expand steps" : "Collapse steps") + '">' + (node.collapsed ? "▸" : "▾") + '</button>' +
     '<button class="pri-badge ' + pri + '" aria-label="Priority" title="Set how urgent this is">' + pri + '</button>' +
-    '<input type="checkbox" class="chk"' + (node.done ? " checked" : "") + (hasKids ? " disabled" : "") + '>' +
+    '<input type="checkbox" class="chk" aria-label="Mark this task complete"' + (node.done ? " checked" : "") + (hasKids ? " disabled" : "") + '>' +
     '<span class="node-title' + (node.done && !hasKids ? " done" : "") + '" title="Tap to rename"></span>' +
     (hasKids && pct !== null ? '<span class="progress">' + pct + '%</span>' : '') +
     '<div class="node-acts">' +
