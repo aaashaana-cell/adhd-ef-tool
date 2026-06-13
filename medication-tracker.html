@@ -17,6 +17,8 @@
   .field{display:flex; flex-direction:column; gap:4px;}
   .field.full{grid-column:1 / -1;}
   .subhead{grid-column:1 / -1; font-size:.74rem; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--primary-dark); border-bottom:1px solid var(--line); padding-bottom:6px; margin-top:10px;}
+  .hint{font-size:.8rem; color:var(--muted); line-height:1.45; margin-top:6px;}
+  .hint.alert{color:#7a4f24;}
   label{font-size:.8rem; font-weight:600; color:var(--muted);}
   input,select,textarea{font-family:inherit; font-size:1rem; color:var(--ink);
     border:1px solid var(--line); border-radius:9px; padding:9px 10px; background:#fff; width:100%;}
@@ -92,7 +94,10 @@
           <label><input type="checkbox" id="sfCrash"> Rebound or crash</label>
         </div>
       </div>
-      <div class="field full"><label for="sfOther">Other adverse effects</label><input type="text" id="sfOther" placeholder="anything else you noticed"></div>
+      <div class="field full"><label for="sfOther">Other adverse effects</label><input type="text" id="sfOther" placeholder="anything else you noticed">
+        <p class="hint">For example: feeling jittery or wired, dizziness, sweating, a change in weight, stomach upset, drowsiness, or feeling low or irritable. Note anything you want to raise.</p>
+        <p class="hint alert">If you ever have chest pain, a racing or irregular heartbeat that does not settle, fainting, a marked change in mood, or any thoughts of harming yourself, do not just note it here. Contact your doctor, or emergency services if it is urgent.</p>
+      </div>
       <div class="field full">
         <details class="optional"><summary>Optional measurements (blood pressure, heart rate)</summary>
           <div class="grid" style="margin-top:10px;">
