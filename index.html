@@ -7,7 +7,6 @@
 <title>ADHD planner &amp; focus tool | Dr Aana Shah</title>
 <meta name="description" content="A free, private tool to help an adult ADHD brain plan the day, break big tasks into small steps, focus in short bursts, and follow through. No sign-up, works on your phone.">
 <link rel="canonical" href="https://tools.draanashah.com/">
-<!-- Social preview (Open Graph / Twitter) -->
 <meta property="og:type" content="website">
 <meta property="og:site_name" content="Dr Aana Shah">
 <meta property="og:url" content="https://tools.draanashah.com/">
@@ -205,6 +204,9 @@
   .block.done { opacity: .6; }
   .blk-chk { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--accent); margin: 0; }
   .cat-bar { position: absolute; left: 0; top: 7px; bottom: 7px; width: 5px; border-radius: 4px; }
+  .block.has-bar { padding-bottom: 18px; }
+  .time-bar { position: absolute; left: 12px; right: 12px; bottom: 6px; height: 5px; background: rgba(20,36,27,.14); border-radius: 999px; overflow: hidden; }
+  .time-bar-fill { height: 100%; background: var(--primary); border-radius: 999px; transition: width .5s linear; }
   .cat-row { display: flex; gap: 10px; }
   .cat-swatch { width: 36px; height: 36px; border-radius: 9px; border: 2px solid var(--line); background: var(--sw); padding: 0; cursor: pointer; }
   .cat-swatch[data-k=""] { background: var(--surface); position: relative; }
@@ -459,7 +461,6 @@
   </div>
 </header>
 
-<!-- ============ GUIDE / INDEX (full-screen overlay) ============ -->
 <div class="guide-overlay" id="guide">
   <div class="guide-inner">
     <h1 class="guide-h1">Welcome to your ADHD &amp; Executive Function Tool</h1>
@@ -504,7 +505,6 @@
   </div>
 </div>
 
-<!-- ============ PROBLEM SOLVER (full-screen overlay) ============ -->
 <div class="guide-overlay" id="solver">
   <div class="guide-inner">
     <div class="row" style="align-items:flex-start;">
@@ -517,7 +517,6 @@
 </div>
 
 <main>
-  <!-- ============ PLAN ============ -->
   <section class="tab-panel" id="panel-plan">
     <div class="sec-head" style="--hue:var(--c-plan);"><span class="dot"></span><h2>Plan</h2></div>
     <div class="tip"><b>Shape your day.</b> Block out your time so the day feels real instead of slipping away. Set a routine you repeat each day, change just today whenever you need, and the block you're in counts down to show where your time is going. You can also send any task from your Tasks list straight here as a time block.</div>
@@ -554,7 +553,6 @@
     <button class="btn" id="wrapUpBtn" style="width:100%; margin-top:14px; background:var(--c-buddy); color:#fff; border:none;">Done for today</button>
   </section>
 
-  <!-- ============ TASKS (master planner) ============ -->
   <section class="tab-panel active" id="panel-tasks">
     <div class="sec-head" style="--hue:var(--c-tasks);"><span class="dot"></span><h2>Tasks</h2></div>
     <div class="tip"><b>Start here.</b> Make a master list of everything you need to get done. Write it all down, choose how urgent each one is, break the big goals into smaller steps, then send them to the Plan tab.</div>
@@ -577,7 +575,6 @@
     <button class="btn ghost" id="openSolver" style="width:100%; margin-top:10px; color:var(--c-tasks); border-color:var(--line);">Stuck on something? Work it through</button>
   </section>
 
-  <!-- ============ FOCUS ============ -->
   <section class="tab-panel" id="panel-focus">
     <div class="sec-head" style="--hue:var(--c-focus);"><span class="dot"></span><h2>Focus</h2></div>
     <div class="tip"><b>Work in short bursts.</b> Pick something to focus on, start the timer, and keep going until the break. Short, timed bursts are far easier to start than open-ended work, and the breaks keep you fresh. Park any stray thoughts below so they don't pull you away.</div>
@@ -649,7 +646,6 @@
     </div>
   </section>
 
-  <!-- ============ REWARDS ============ -->
   <section class="tab-panel" id="panel-rewards">
     <div class="sec-head" style="--hue:var(--c-rewards);"><span class="dot"></span><h2>Rewards</h2></div>
     <div class="tip"><b>A nudge for your brain.</b> Earn points for doing the work, then spend them on rewards you choose. A points system can feel a little childish at first, but it's here for a real reason: immediate, concrete rewards genuinely help an ADHD brain follow through. That's established learning theory, not a gimmick.</div>
@@ -669,7 +665,6 @@
     <div id="ledger"></div>
   </section>
 
-  <!-- ============ IF-THEN ============ -->
   <section class="tab-panel" id="panel-ifthen">
     <div class="sec-head" style="--hue:var(--c-ifthen);"><span class="dot"></span><h2>If-Then plans</h2></div>
     <div class="tip"><b>Your follow-through plan.</b> The other tabs sort out what to do and when. This is how you actually do it when motivation dips: decide your response ahead of time to the moments that trip you up, so it's automatic instead of a willpower fight. &ldquo;When ___ happens, I will ___.&rdquo;</div>
@@ -680,7 +675,6 @@
     <div class="legend" id="ifThenIdeas"></div>
   </section>
 
-  <!-- ============ BUDDY ============ -->
   <section class="tab-panel" id="panel-buddy">
     <div class="sec-head" style="--hue:var(--c-buddy);"><span class="dot"></span><h2>Accountability buddy</h2></div>
     <div class="tip"><b>Get someone in your corner.</b> The rest of the toolkit works on your own. This adds the piece that's hardest to do solo: outside accountability. Write down your goal and how you'll check in, then share it with someone you trust. Knowing someone will ask makes it far easier to follow through.</div>
@@ -693,7 +687,6 @@
   </footer>
 </main>
 
-<!-- ============ Pause / urge-surfing tool ============ -->
 <div class="pause-dock" id="pauseDock">
   <button class="pause-min" id="pauseMin" aria-label="Hide the pause button" title="Hide">&#10005;</button>
   <button class="pause-fab" id="pauseBtn">Pause</button>
@@ -701,7 +694,6 @@
 <button class="pause-restore" id="pauseRestore" aria-label="Show the pause button" title="Show pause">&#8249;</button>
 <div class="pause-overlay" id="pause"><div class="pause-inner" id="pauseBody"></div></div>
 
-<!-- ============ Bottom nav ============ -->
 <nav class="tabs">
   <button data-tab="tasks" class="active"><span class="ic">&#10003;</span>Tasks</button>
   <button data-tab="plan"><span class="ic">&#9638;</span>Plan</button>
@@ -711,7 +703,6 @@
   <button data-tab="buddy"><span class="ic">&#9825;</span>Buddy</button>
 </nav>
 
-<!-- ============ Generic modal ============ -->
 <div class="modal-back" id="modalBack">
   <div class="modal" id="modal"></div>
 </div>
@@ -924,17 +915,20 @@ function renderPlanner() {
       const nl = document.createElement("div"); nl.className = "nowline"; blocksEl.appendChild(nl); nowLineDrawn = true;
     }
 
-    // optional linked task -> small chip under the label
+    // optional linked task -> small chip under the label (only when it differs from the label, to avoid duplication)
     let chip = "";
     if (b.taskId) {
       const tr = findNode(b.taskId);
-      if (tr) chip = '<span class="task-chip sub' + (tr.node.done ? " done" : "") + '">' +
+      if (tr && tr.node.title !== b.label) chip = '<span class="task-chip sub' + (tr.node.done ? " done" : "") + '">' +
         (tr.node.done ? "&#10003; " : "&#9633; ") + esc(tr.node.title) + '</span>';
     }
 
     const showChk = (plannerMode === "today");   // you tick off real days, not the recurring routine
+    // current block gets a thin bar that drains as the block elapses (time-blindness aid)
+    const remPct = isNow ? Math.max(0, Math.min(100, (endM - now) / (endM - startM) * 100)) : 0;
+    const timeBar = isNow ? '<span class="time-bar"><span class="time-bar-fill" style="width:' + remPct.toFixed(1) + '%"></span></span>' : "";
     const el = document.createElement("div");
-    el.className = "block" + (isNow ? " now" : "") + (isPast ? " past" : "") + (b.done ? " done" : "");
+    el.className = "block" + (isNow ? " now has-bar" : "") + (isPast ? " past" : "") + (b.done ? " done" : "");
     if (b.cat) el.style.setProperty("--cat", catColor(b.cat));
     el.innerHTML =
       (b.cat ? '<span class="cat-bar" style="background:' + catColor(b.cat) + ';"></span>' : '') +
@@ -944,7 +938,7 @@ function renderPlanner() {
       '<div class="acts">' +
         '<button class="btn icon ghost sm edit" aria-label="Edit" title="Edit">&#9998;</button>' +
         '<button class="btn icon ghost sm del" aria-label="Delete" title="Delete">&#10005;</button>' +
-      '</div>';
+      '</div>' + timeBar;
     el.querySelector(".lbl-main").textContent = b.label;
     if (showChk) el.querySelector(".blk-chk").onchange = (e) => toggleBlockDone(b.id, e.target.checked);
     el.querySelector(".edit").onclick = () => openBlockEditor(b.id);
@@ -1089,7 +1083,7 @@ function openWrapUp() {
     : '<p class="wrap-line">You didn\'t tick much off today, and that\'s completely fine. Some days are like that, and showing up still counts.</p>';
   modalHTML("Done for today",
     winsHTML +
-    '<p class="wrap-line">That\'s a good day\'s work. Whatever you didn\'t get to carries over to tomorrow, and there will always be more to do than fits in one day. That\'s okay.</p>' +
+    '<p class="wrap-line">That\'s a good day\'s work. Whatever you didn\'t get to carries over to tomorrow, and there will always be more to do than fits in one day.</p>' +
     '<p class="wrap-line">Now close this, step away, and let yourself recharge.</p>' +
     '<div class="modal-actions"><button class="btn primary" id="wrapDone" style="flex:1;">Goodnight</button><button class="btn ghost" id="wrapMore" style="flex:1;">Keep going</button></div>',
     () => { document.getElementById("wrapDone").onclick = closeModal; document.getElementById("wrapMore").onclick = closeModal; });
@@ -1816,6 +1810,7 @@ function showContract() {
   };
   document.getElementById("byWhats").href = "https://wa.me/?text=" + encodeURIComponent(text);
   document.getElementById("byWhats").target = "_blank";
+  document.getElementById("byWhats").rel = "noopener";
   document.getElementById("byMail").href = "mailto:?subject=" + encodeURIComponent("My accountability contract") + "&body=" + encodeURIComponent(text);
 }
 function flash(id, msg) { const el = document.getElementById(id); const o = el.textContent; el.textContent = msg; setTimeout(() => { el.textContent = o; }, 1500); }
