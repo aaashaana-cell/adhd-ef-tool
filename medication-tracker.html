@@ -16,6 +16,7 @@
   .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px 14px;}
   .field{display:flex; flex-direction:column; gap:4px;}
   .field.full{grid-column:1 / -1;}
+  .subhead{grid-column:1 / -1; font-size:.74rem; font-weight:700; letter-spacing:1.2px; text-transform:uppercase; color:var(--primary-dark); border-bottom:1px solid var(--line); padding-bottom:6px; margin-top:10px;}
   label{font-size:.8rem; font-weight:600; color:var(--muted);}
   input,select,textarea{font-family:inherit; font-size:1rem; color:var(--ink);
     border:1px solid var(--line); border-radius:9px; padding:9px 10px; background:#fff; width:100%;}
@@ -59,35 +60,38 @@
   <div class="card">
     <h2>Add today's entry</h2>
     <div class="grid">
+      <div class="subhead full">Medication</div>
       <div class="field"><label for="date">Date</label><input type="date" id="date"></div>
-      <div class="field"><label for="meds">Medication and doses taken</label><input type="text" id="meds" placeholder="e.g. 10mg SR morning, 5mg IR afternoon"></div>
-      <div class="field full"><label for="workload">Workload and demands today</label><input type="text" id="workload" placeholder="e.g. high - presentation and travel"></div>
+      <div class="field"><label for="meds">Medication and dose taken</label><input type="text" id="meds" placeholder="e.g. 10mg SR morning, 5mg IR afternoon"></div>
+      <div class="field full"><label for="demands">Demands today (context)</label><input type="text" id="demands" placeholder="e.g. high - presentation and travel"></div>
 
-      <div class="field"><label for="focus">Focus</label>
+      <div class="subhead full">Target symptoms and response</div>
+      <div class="field"><label for="focus">Focus and attention</label>
         <select id="focus"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Poor</option><option>Very poor</option></select></div>
-      <div class="field"><label for="mood">Mood</label>
-        <select id="mood"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Low</option><option>Very low</option></select></div>
       <div class="field"><label for="exec">Getting things done</label>
         <select id="exec"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Hard</option><option>Very hard</option></select></div>
-      <div class="field"><label for="irrit">Irritability or anger</label>
-        <select id="irrit"><option value="">&mdash;</option><option>None</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></div>
+      <div class="field"><label for="restless">Restlessness or impulsivity</label>
+        <select id="restless"><option value="">&mdash;</option><option>None</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></div>
+
+      <div class="subhead full">Mood</div>
+      <div class="field"><label for="mood">Mood</label>
+        <select id="mood"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Low</option><option>Very low</option></select></div>
       <div class="field"><label for="anx">Anxiety</label>
         <select id="anx"><option value="">&mdash;</option><option>None</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></div>
-      <div class="field"><label for="sleep">Sleep</label>
-        <select id="sleep"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Poor</option><option>Very poor</option></select></div>
-      <div class="field"><label for="appetite">Appetite</label>
-        <select id="appetite"><option value="">&mdash;</option><option>Normal</option><option>Reduced</option><option>Increased</option><option>Poor</option></select></div>
+      <div class="field"><label for="irrit">Irritability or anger</label>
+        <select id="irrit"><option value="">&mdash;</option><option>None</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></div>
 
-      <div class="field full"><label>Side effects noticed</label>
+      <div class="subhead full">Adverse effects</div>
+      <div class="field full"><label>Tick any you noticed</label>
         <div class="sidefx">
           <label><input type="checkbox" id="sfHeadache"> Headache</label>
           <label><input type="checkbox" id="sfPalp"> Palpitations</label>
           <label><input type="checkbox" id="sfNausea"> Nausea</label>
           <label><input type="checkbox" id="sfDry"> Dry mouth</label>
+          <label><input type="checkbox" id="sfTics"> Tics</label>
         </div>
       </div>
-      <div class="field full"><label for="sfOther">Other side effects</label><input type="text" id="sfOther" placeholder="anything else you noticed"></div>
-
+      <div class="field full"><label for="sfOther">Other adverse effects</label><input type="text" id="sfOther" placeholder="anything else you noticed"></div>
       <div class="field full">
         <details class="optional"><summary>Optional measurements (blood pressure, heart rate)</summary>
           <div class="grid" style="margin-top:10px;">
@@ -97,7 +101,16 @@
         </details>
       </div>
 
-      <div class="field full"><label for="notes">Notes</label><textarea id="notes" placeholder="anything worth remembering for your review"></textarea></div>
+      <div class="subhead full">Sleep and appetite</div>
+      <div class="field"><label for="sleep">Sleep</label>
+        <select id="sleep"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Poor</option><option>Very poor</option></select></div>
+      <div class="field"><label for="appetite">Appetite</label>
+        <select id="appetite"><option value="">&mdash;</option><option>Normal</option><option>Reduced</option><option>Increased</option><option>Poor</option></select></div>
+      <div class="field"><label for="appTiming">When appetite was most reduced</label>
+        <select id="appTiming"><option value="">&mdash;</option><option>Not reduced</option><option>Morning</option><option>Midday</option><option>Afternoon</option><option>Evening</option><option>Most of the day</option></select></div>
+
+      <div class="subhead full">Notes</div>
+      <div class="field full"><textarea id="notes" aria-label="Notes" placeholder="anything worth remembering for your review"></textarea></div>
     </div>
     <div class="btnrow">
       <button class="btn primary" id="saveBtn">Save entry</button>
@@ -126,10 +139,11 @@
 var KEY="medTracker.v1";
 var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 var COLS=[
-  ["date","Date"],["day","Day"],["meds","Medication and doses"],["workload","Workload/demands"],
-  ["focus","Focus"],["mood","Mood"],["exec","Getting things done"],["irrit","Irritability/anger"],
-  ["anx","Anxiety"],["sleep","Sleep"],["appetite","Appetite"],["sidefx","Side effects"],
-  ["bp","Blood pressure"],["hr","Heart rate"],["notes","Notes"]
+  ["date","Date"],["day","Day"],["meds","Medication and dose"],["demands","Demands"],
+  ["focus","Focus and attention"],["exec","Getting things done"],["restless","Restlessness/impulsivity"],
+  ["mood","Mood"],["anx","Anxiety"],["irrit","Irritability"],
+  ["sidefx","Adverse effects"],["bp","Blood pressure"],["hr","Heart rate"],
+  ["sleep","Sleep"],["appetite","Appetite"],["appTiming","Appetite most reduced"],["notes","Notes"]
 ];
 function load(){ try{ return JSON.parse(localStorage.getItem(KEY))||[]; }catch(e){ return []; } }
 function save(d){ localStorage.setItem(KEY, JSON.stringify(d)); }
@@ -146,12 +160,13 @@ function collectSideFx(){
   if($("sfPalp").checked) fx.push("Palpitations");
   if($("sfNausea").checked) fx.push("Nausea");
   if($("sfDry").checked) fx.push("Dry mouth");
+  if($("sfTics").checked) fx.push("Tics");
   var o=$("sfOther").value.trim(); if(o) fx.push(o);
   return fx.join("; ");
 }
 function clearForm(){
-  ["meds","workload","focus","mood","exec","irrit","anx","sleep","appetite","sfOther","bp","hr","notes"].forEach(function(id){ $(id).value=""; });
-  ["sfHeadache","sfPalp","sfNausea","sfDry"].forEach(function(id){ $(id).checked=false; });
+  ["meds","demands","focus","exec","restless","mood","anx","irrit","sleep","appetite","appTiming","sfOther","bp","hr","notes"].forEach(function(id){ $(id).value=""; });
+  ["sfHeadache","sfPalp","sfNausea","sfDry","sfTics"].forEach(function(id){ $(id).checked=false; });
   $("date").value=todayISO();
 }
 function addEntry(){
@@ -159,10 +174,12 @@ function addEntry(){
   if(!iso){ alert("Please pick a date."); return; }
   var entry={
     id:Date.now(), date:iso, day:dayName(iso),
-    meds:$("meds").value.trim(), workload:$("workload").value.trim(),
-    focus:$("focus").value, mood:$("mood").value, exec:$("exec").value,
-    irrit:$("irrit").value, anx:$("anx").value, sleep:$("sleep").value, appetite:$("appetite").value,
-    sidefx:collectSideFx(), bp:$("bp").value.trim(), hr:$("hr").value.trim(), notes:$("notes").value.trim()
+    meds:$("meds").value.trim(), demands:$("demands").value.trim(),
+    focus:$("focus").value, exec:$("exec").value, restless:$("restless").value,
+    mood:$("mood").value, anx:$("anx").value, irrit:$("irrit").value,
+    sidefx:collectSideFx(), bp:$("bp").value.trim(), hr:$("hr").value.trim(),
+    sleep:$("sleep").value, appetite:$("appetite").value, appTiming:$("appTiming").value,
+    notes:$("notes").value.trim()
   };
   var data=load();
   data.push(entry);
@@ -190,7 +207,7 @@ function render(){
       var td=document.createElement("td");
       var v = c[0]==="date" ? fmtDate(e.date) : (e[c[0]]||"");
       td.textContent=v;
-      if(c[0]==="notes"||c[0]==="sidefx"||c[0]==="workload") td.className="note";
+      if(c[0]==="notes"||c[0]==="sidefx"||c[0]==="demands") td.className="note";
       tr.appendChild(td);
     });
     var tdx=document.createElement("td");
