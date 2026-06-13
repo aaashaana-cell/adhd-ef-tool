@@ -89,6 +89,7 @@
           <label><input type="checkbox" id="sfNausea"> Nausea</label>
           <label><input type="checkbox" id="sfDry"> Dry mouth</label>
           <label><input type="checkbox" id="sfTics"> Tics</label>
+          <label><input type="checkbox" id="sfCrash"> Rebound or crash</label>
         </div>
       </div>
       <div class="field full"><label for="sfOther">Other adverse effects</label><input type="text" id="sfOther" placeholder="anything else you noticed"></div>
@@ -161,12 +162,13 @@ function collectSideFx(){
   if($("sfNausea").checked) fx.push("Nausea");
   if($("sfDry").checked) fx.push("Dry mouth");
   if($("sfTics").checked) fx.push("Tics");
+  if($("sfCrash").checked) fx.push("Rebound/crash");
   var o=$("sfOther").value.trim(); if(o) fx.push(o);
   return fx.join("; ");
 }
 function clearForm(){
   ["meds","demands","focus","exec","restless","mood","anx","irrit","sleep","appetite","appTiming","sfOther","bp","hr","notes"].forEach(function(id){ $(id).value=""; });
-  ["sfHeadache","sfPalp","sfNausea","sfDry","sfTics"].forEach(function(id){ $(id).checked=false; });
+  ["sfHeadache","sfPalp","sfNausea","sfDry","sfTics","sfCrash"].forEach(function(id){ $(id).checked=false; });
   $("date").value=todayISO();
 }
 function addEntry(){
