@@ -723,7 +723,8 @@
 "use strict";
 /* =====================================================================
    Focus Toolkit — patient-facing executive-function support tool.
-   Single-file, offline, localStorage only. No data ever leaves the device.
+   Single-file, localStorage only. User data never leaves the device; only an
+   anonymous, cookieless page-view ping is sent (GoatCounter) so usage is visible.
    Built on established EF principles (externalise time, break tasks down,
    work in short bouts) — not reproducing any copyrighted material.
    v1 modules: Plan / Tasks / Focus.  (v2 hooks noted inline.)
@@ -2257,7 +2258,8 @@ function openMenu() {
     '</div>' +
     '<p class="muted small" style="margin:4px 0 14px;">Colourful is more engaging; Calm is lower-stimulation. Pick whatever feels easiest on your eyes.</p>' +
     '<div class="panel-sub" style="margin-top:0;">Your data</div>' +
-    '<p class="muted small">Everything you enter stays on this device only. Nothing is sent anywhere. ' +
+    '<p class="muted small">Everything you enter stays on this device only. Your entries are never sent anywhere. ' +
+    'The only thing shared is an anonymous page-view count, with no personal data and no cookies, so Dr Shah can see the tool is being used. ' +
     'Use a backup file to move your data to another device or to keep it safe.</p>' +
     '<div class="modal-actions" style="flex-direction:column;">' +
       '<button class="btn primary" id="mExport">Download my data (backup)</button>' +
@@ -2356,5 +2358,8 @@ if (!state.settings.seenGuide) openGuide();   // show the index on first visit
 // keep the "now" line, countdowns and current-block banner live
 setInterval(() => { if (document.getElementById("panel-plan").classList.contains("active")) renderPlanner(); }, 30000);
 </script>
+<!-- Anonymous, cookieless visit counter (GoatCounter). Counts page views only; no personal data, no cookies; the data you enter never leaves your device. -->
+<script data-goatcounter="https://draanashah.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>
