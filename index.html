@@ -1105,7 +1105,7 @@ function openWrapUp() {
     : '<p class="wrap-line">You didn\'t tick much off today, but no worries. Some days are just like that.</p>';
   modalHTML("Done for today",
     winsHTML +
-    '<p class="wrap-line">That\'s a good day\'s work. Whatever you didn\'t get to carries over to tomorrow, and there will always be more to do than fits in one day.</p>' +
+    '<p class="wrap-line">That\'s a good day\'s work. Whatever you didn\'t get to carries over to tomorrow.</p>' +
     '<p class="wrap-line">Now close this, step away, and let yourself recharge.</p>' +
     '<div class="modal-actions"><button class="btn primary" id="wrapDone" style="flex:1;">Goodnight</button><button class="btn ghost" id="wrapMore" style="flex:1;">Keep going</button></div>',
     () => { document.getElementById("wrapDone").onclick = closeModal; document.getElementById("wrapMore").onclick = closeModal; });
