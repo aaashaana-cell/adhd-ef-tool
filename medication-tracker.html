@@ -73,6 +73,8 @@
         <select id="focus"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Poor</option><option>Very poor</option></select></div>
       <div class="field"><label for="exec">Getting things done</label>
         <select id="exec"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Hard</option><option>Very hard</option></select></div>
+      <div class="field"><label for="memory">Remembering and keeping track</label>
+        <select id="memory"><option value="">&mdash;</option><option>Good</option><option>Okay</option><option>Poor</option><option>Very poor</option></select></div>
       <div class="field"><label for="restless">Restlessness or impulsivity</label>
         <select id="restless"><option value="">&mdash;</option><option>None</option><option>Mild</option><option>Moderate</option><option>Marked</option></select></div>
 
@@ -97,7 +99,7 @@
       </div>
       <div class="field full"><label for="sfOther">Other adverse effects</label><input type="text" id="sfOther" placeholder="anything else you noticed">
         <p class="hint">For example: feeling jittery or wired, dizziness, sweating, a change in weight, stomach upset, drowsiness, or feeling low or irritable. Note anything you want to raise.</p>
-        <p class="hint alert">If you ever have chest pain, a racing or irregular heartbeat that does not settle, fainting, a marked change in mood, or any thoughts of harming yourself, do not just note it here. Contact your doctor, or emergency services if it is urgent.</p>
+        <p class="hint alert">If you ever have chest pain, a racing or irregular heartbeat that does not settle, fainting, a marked change in mood, or any thoughts of harming yourself, do not just note it here. Contact your doctor, or your nearest hospital if it is urgent.</p>
       </div>
       <div class="field full">
         <details class="optional"><summary>Optional measurements (blood pressure, heart rate)</summary>
@@ -147,7 +149,7 @@ var KEY="medTracker.v1";
 var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 var COLS=[
   ["date","Date"],["day","Day"],["meds","Medication and dose"],["demands","Demands"],
-  ["focus","Focus and attention"],["exec","Getting things done"],["restless","Restlessness/impulsivity"],
+  ["focus","Focus and attention"],["exec","Getting things done"],["memory","Remembering/keeping track"],["restless","Restlessness/impulsivity"],
   ["mood","Mood"],["anx","Anxiety"],["irrit","Irritability"],
   ["sidefx","Adverse effects"],["bp","Blood pressure"],["hr","Heart rate"],
   ["sleep","Sleep"],["appetite","Appetite"],["appTiming","Appetite most reduced"],["notes","Notes"]
@@ -173,7 +175,7 @@ function collectSideFx(){
   return fx.join("; ");
 }
 function clearForm(){
-  ["meds","demands","focus","exec","restless","mood","anx","irrit","sleep","appetite","appTiming","sfOther","bp","hr","notes"].forEach(function(id){ $(id).value=""; });
+  ["meds","demands","focus","exec","memory","restless","mood","anx","irrit","sleep","appetite","appTiming","sfOther","bp","hr","notes"].forEach(function(id){ $(id).value=""; });
   ["sfHeadache","sfPalp","sfNausea","sfDry","sfTics","sfCrash"].forEach(function(id){ $(id).checked=false; });
   $("date").value=todayISO();
 }
@@ -183,7 +185,7 @@ function addEntry(){
   var entry={
     id:Date.now(), date:iso, day:dayName(iso),
     meds:$("meds").value.trim(), demands:$("demands").value.trim(),
-    focus:$("focus").value, exec:$("exec").value, restless:$("restless").value,
+    focus:$("focus").value, exec:$("exec").value, memory:$("memory").value, restless:$("restless").value,
     mood:$("mood").value, anx:$("anx").value, irrit:$("irrit").value,
     sidefx:collectSideFx(), bp:$("bp").value.trim(), hr:$("hr").value.trim(),
     sleep:$("sleep").value, appetite:$("appetite").value, appTiming:$("appTiming").value,
