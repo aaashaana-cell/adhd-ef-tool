@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ADHD symptom self-check (ASRS) | Dr Aana Shah</title>
+<meta name="description" content="A private, on-device ADHD symptom self-check (ASRS v1.1) for tracking how things change over time. Not a diagnosis. By Dr Aana Shah.">
+<link rel="canonical" href="https://tools.draanashah.com/symptom-check.html">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+  .lead-note{background:var(--warn-soft); border-radius:12px; padding:13px 16px; margin-bottom:24px; font-size:.9rem; line-height:1.5; color:#7a4f24;}
+  .lead-note b{color:#5e3c1b;}
+  .q{padding:14px 0; border-bottom:1px solid var(--line);}
+  .q-text{font-weight:600; margin-bottom:10px; font-size:.98rem;}
+  .q-num{color:var(--muted); font-weight:700; margin-right:4px;}
+  .scale{display:flex; flex-wrap:wrap; gap:6px;}
+  .scale label{flex:1 1 80px; display:flex; flex-direction:column; align-items:center; gap:4px;
+    border:1px solid var(--line); border-radius:9px; padding:8px 4px; cursor:pointer; font-size:.78rem; text-align:center; color:var(--muted);}
+  .scale label:hover{border-color:var(--primary);}
+  .scale input{margin:0;}
+  .scale input:checked + span{color:var(--primary-dark); font-weight:700;}
+  .scale label:has(input:checked){border-color:var(--primary); background:var(--soft);}
+  .btn{font-family:inherit; font-weight:700; font-size:.95rem; border-radius:999px; padding:12px 22px; cursor:pointer; border:1px solid transparent;}
+  .btn.primary{background:var(--primary); color:#fff;} .btn.primary:hover{background:var(--primary-dark);}
+  .btn.ghost{background:#fff; color:var(--ink); border-color:var(--line);} .btn.ghost:hover{border-color:var(--primary);}
+  .btnrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:18px;}
+  .result{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 16px; margin-top:8px;}
+  .result.warn{border-color:#e6c07a; background:var(--warn-soft);}
+  .score-row{display:flex; justify-content:space-between; align-items:baseline; padding:7px 0; border-bottom:1px solid var(--line); font-size:.95rem;}
+  .score-row:last-of-type{border-bottom:none;}
+  .score-row b{font-size:1.05rem;}
+  .sev{font-size:.8rem; font-weight:700; padding:2px 8px; border-radius:999px; background:var(--soft); color:var(--primary-dark);}
+  .sev.high,.sev.veryhigh{background:#fde9d6; color:#8a4b1a;}
+  .history{margin-top:10px; font-size:.86rem; color:var(--muted);}
+  .history table{width:100%; border-collapse:collapse; margin-top:6px;}
+  .history th,.history td{text-align:left; padding:5px 8px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  .history th{color:var(--primary-dark); font-weight:700;}
+  .miss{color:#c0403f; font-size:.85rem; margin-top:10px;}
+  @media print{ .scale,.btnrow,.lead-note,.clearlink{display:none !important;} }
+</style>
+</head>
+<body>
+<div class="doc">
+  <div class="topbar">
+    <span class="kicker">Dr Aana Shah</span>
+    <a class="backlink" href="/">&#8592; Back to the tool</a>
+  </div>
+
+  <h1>ADHD symptom self-check</h1>
+  <p class="lead">A private check-in using the ASRS v1.1, a widely used adult ADHD symptom questionnaire. It is meant for your own insight and to track how things change over time, especially on treatment.</p>
+
+  <div class="lead-note">
+    <b>This is a screening questionnaire, not a diagnosis.</b> A high score does not mean you have ADHD, and a low score does not rule it out. Only a clinician can diagnose, taking your full history into account. Everything you enter stays on your device; nothing is sent anywhere.
+  </div>
+
+  <p style="font-weight:600;margin-bottom:4px;">Over the past 6 months, how often have you...</p>
+  <div id="questions"></div>
+
+  <div class="btnrow">
+    <button class="btn primary" id="scoreBtn">See my results</button>
+    <button class="btn ghost" id="resetBtn">Clear answers</button>
+  </div>
+  <div id="missMsg" class="miss" style="display:none;"></div>
+
+  <div id="resultArea" style="display:none;"></div>
+
+  <nav class="docnav">
+    <div class="docnav-title">More from Dr Aana Shah</div>
+    <a href="medication-tracker.html">Medication tracker<span>A daily log to bring to your reviews</span></a>
+    <a href="understanding-adhd.html">Understanding ADHD<span>What an ADHD diagnosis means</span></a>
+    <a href="/">The planning and focus tool<span>Plan the day, break tasks down, focus in short bursts</span></a>
+  </nav>
+  <p class="pagefoot">Made by <a href="https://draanashah.com" rel="noopener">Dr Aana Shah</a> &middot; <a href="/">tools.draanashah.com</a><br>ASRS v1.1 is a World Health Organization screening scale.</p>
+</div>
+
+<script>
+"use strict";
+var KEY = "asrsHistory.v1";
+var OPTIONS = ["Never", "Rarely", "Sometimes", "Often", "Very Often"];
+var ITEMS = [
+  "have trouble wrapping up the final details of a project, once the challenging parts have been done?",
+  "have difficulty getting things in order when you have to do a task that requires organization?",
+  "have problems remembering appointments or obligations?",
+  "(when you have a task that requires a lot of thought) avoid or delay getting started?",
+  "fidget or squirm with your hands or feet when you have to sit down for a long time?",
+  "feel overly active and compelled to do things, like you were driven by a motor?",
+  "make careless mistakes when you have to work on a boring or difficult project?",
+  "have difficulty keeping your attention when you are doing boring or repetitive work?",
+  "have difficulty concentrating on what people say to you, even when they are speaking to you directly?",
+  "misplace or have difficulty finding things at home or at work?",
+  "feel distracted by activity or noise around you?",
+  "leave your seat in meetings or other situations in which you are expected to remain seated?",
+  "feel restless or fidgety?",
+  "have difficulty unwinding and relaxing when you have time to yourself?",
+  "find yourself talking too much when you are in social situations?",
+  "(when you're in a conversation) find yourself finishing the sentences of the people you are talking to, before they can finish them themselves?",
+  "have difficulty waiting your turn in situations when turn taking is required?",
+  "interrupt others when they are busy?"
+];
+var $ = function(id){ return document.getElementById(id); };
+
+// Render questions
+(function(){
+  var html = "";
+  for (var i = 0; i < ITEMS.length; i++) {
+    html += '<div class="q"><div class="q-text"><span class="q-num">' + (i + 1) + '.</span>' + ITEMS[i] + '</div><div class="scale">';
+    for (var v = 0; v < 5; v++) {
+      html += '<label><input type="radio" name="q' + i + '" value="' + v + '"><span>' + OPTIONS[v] + '</span></label>';
+    }
+    html += '</div></div>';
+  }
+  $("questions").innerHTML = html;
+})();
+
+// ASRS v1.1 scoring (NovoPsych 2024) — ported from Dr Shah's clinical scoring engine
+function asrsCalculateScores(responses) {
+  var vals = responses.map(function(v){ return (v === null || v === undefined || v === "") ? null : parseInt(v, 10); });
+  var partASum = 0, partBSum = 0, partACount = 0, partBCount = 0;
+  var partBThresholds = [3, 3, 2, 3, 3, 2, 3, 3, 3, 2, 3, 2];
+  for (var i = 0; i < 18; i++) {
+    var val = vals[i];
+    if (val === null || isNaN(val)) continue;
+    if (i < 6) { partASum += val; var t = i < 3 ? 2 : 3; if (val >= t) partACount++; }
+    else { partBSum += val; if (val >= partBThresholds[i - 6]) partBCount++; }
+  }
+  function band(s, l, m, h){ return s <= l ? "Low" : s <= m ? "Mild" : s <= h ? "High" : "Very High"; }
+  return {
+    partASum: partASum, partBSum: partBSum, totalScore: partASum + partBSum,
+    partACount: partACount, partBCount: partBCount,
+    partASeverity: band(partASum, 9, 13, 17),
+    partBSeverity: band(partBSum, 19, 26, 32),
+    totalSeverity: band(partASum + partBSum, 30, 39, 49),
+    screeningPositive: partASum >= 14
+  };
+}
+
+function getResponses(){
+  var r = [];
+  for (var i = 0; i < 18; i++) {
+    var sel = document.querySelector('input[name="q' + i + '"]:checked');
+    r.push(sel ? sel.value : null);
+  }
+  return r;
+}
+function fmtDate(iso){ var p = iso.split("-"); return p[2] + "/" + p[1] + "/" + p[0]; }
+function todayISO(){ var d = new Date(); return d.getFullYear() + "-" + ("0"+(d.getMonth()+1)).slice(-2) + "-" + ("0"+d.getDate()).slice(-2); }
+function sevClass(s){ return s === "Very High" ? "veryhigh" : s === "High" ? "high" : ""; }
+
+function showResults(){
+  var responses = getResponses();
+  var missing = [];
+  responses.forEach(function(v, i){ if (v === null) missing.push(i + 1); });
+  if (missing.length) {
+    $("missMsg").style.display = "block";
+    $("missMsg").textContent = "Please answer all questions. Still to do: " + missing.join(", ") + ".";
+    $("missMsg").scrollIntoView({block:"center"});
+    return;
+  }
+  $("missMsg").style.display = "none";
+  var sc = asrsCalculateScores(responses);
+
+  // save to history
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem(KEY)) || []; } catch(e) {}
+  hist.push({ date: todayISO(), partASum: sc.partASum, partBSum: sc.partBSum, total: sc.totalScore,
+    partASev: sc.partASeverity, totalSev: sc.totalSeverity, screen: sc.screeningPositive });
+  try { localStorage.setItem(KEY, JSON.stringify(hist)); } catch(e) {}
+
+  var screenLine = sc.screeningPositive
+    ? "Your Part A answers are in the range that is commonly associated with ADHD. This is worth discussing with your clinician."
+    : "Your Part A answers are below the range most commonly associated with ADHD. If you are still struggling, it is still worth raising with your clinician.";
+
+  var html = '<div class="result' + (sc.screeningPositive ? " warn" : "") + '">';
+  html += '<h2 style="margin-top:0;">Your results</h2>';
+  html += '<div class="score-row"><span>Part A (core screening questions)</span><span><b>' + sc.partASum + '</b>/24 <span class="sev ' + sevClass(sc.partASeverity) + '">' + sc.partASeverity + '</span></span></div>';
+  html += '<div class="score-row"><span>Part B (further symptoms)</span><span><b>' + sc.partBSum + '</b>/48 <span class="sev ' + sevClass(sc.partBSeverity) + '">' + sc.partBSeverity + '</span></span></div>';
+  html += '<div class="score-row"><span>Total</span><span><b>' + sc.totalScore + '</b>/72 <span class="sev ' + sevClass(sc.totalSeverity) + '">' + sc.totalSeverity + '</span></span></div>';
+  html += '<p style="margin:12px 0 0;font-size:.95rem;line-height:1.55;">' + screenLine + '</p>';
+  html += '<p style="margin:10px 0 0;font-size:.85rem;color:var(--muted);line-height:1.5;">Remember: this is a screening questionnaire, not a diagnosis. Doing this every month or so lets you and your clinician see how things change, especially with treatment.</p>';
+
+  // history
+  if (hist.length > 1) {
+    html += '<div class="history"><strong style="color:var(--ink);">Your previous checks</strong>';
+    html += '<table><tr><th>Date</th><th>Part A</th><th>Total</th></tr>';
+    hist.slice().reverse().forEach(function(h){
+      html += '<tr><td>' + fmtDate(h.date) + '</td><td>' + h.partASum + '/24</td><td>' + h.total + '/72</td></tr>';
+    });
+    html += '</table></div>';
+  }
+
+  html += '<div class="btnrow">';
+  html += '<button class="btn primary" id="copyBtn">Copy summary to share</button>';
+  html += '<button class="btn ghost" onclick="window.print()">Print</button>';
+  html += '</div>';
+  html += '<p class="clearlink" style="margin:14px 0 0;font-size:.82rem;"><a href="#" id="clearHist" style="color:var(--muted);">Clear my saved checks</a></p>';
+  html += '</div>';
+
+  $("resultArea").innerHTML = html;
+  $("resultArea").style.display = "block";
+  $("resultArea").scrollIntoView({ behavior: "smooth", block: "start" });
+
+  $("copyBtn").onclick = function(){ copySummary(sc, hist); };
+  $("clearHist").onclick = function(e){ e.preventDefault(); if (confirm("Clear all your saved self-checks on this device?")) { localStorage.removeItem(KEY); alert("Cleared."); } };
+}
+
+function copySummary(sc, hist){
+  var lines = [];
+  lines.push("ADHD symptom self-check (ASRS v1.1)");
+  lines.push("Date: " + fmtDate(todayISO()));
+  lines.push("Part A: " + sc.partASum + "/24 (" + sc.partASeverity + ")");
+  lines.push("Part B: " + sc.partBSum + "/48 (" + sc.partBSeverity + ")");
+  lines.push("Total: " + sc.totalScore + "/72 (" + sc.totalSeverity + ")");
+  lines.push("Part A screen: " + (sc.screeningPositive ? "at or above the ADHD-associated range (Part A >= 14)" : "below the ADHD-associated range (Part A < 14)"));
+  if (hist.length > 1) {
+    lines.push("");
+    lines.push("Previous checks (Part A / Total):");
+    hist.slice(0, -1).reverse().forEach(function(h){ lines.push("  " + fmtDate(h.date) + ": " + h.partASum + "/24, " + h.total + "/72"); });
+  }
+  lines.push("");
+  lines.push("(Self-administered screening, not a diagnosis. To discuss with Dr Aana Shah.)");
+  var text = lines.join("\n");
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(text).then(function(){ alert("Summary copied. You can paste it into a message or email to share at your next appointment."); },
+      function(){ window.prompt("Copy this summary to share:", text); });
+  } else {
+    window.prompt("Copy this summary to share:", text);
+  }
+}
+
+$("scoreBtn").onclick = showResults;
+$("resetBtn").onclick = function(){
+  document.querySelectorAll('input[type="radio"]').forEach(function(r){ r.checked = false; });
+  $("resultArea").style.display = "none";
+  $("missMsg").style.display = "none";
+  window.scrollTo({ top: 0, behavior: "smooth" });
+};
+</script>
+<script data-goatcounter="https://draanashah.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
