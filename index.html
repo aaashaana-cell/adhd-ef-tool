@@ -462,6 +462,8 @@
 
   /* ---------- Header buttons ---------- */
   .hdr-btns { display: flex; gap: 8px; }
+  .install-steps { margin: 10px 0 4px; padding-left: 20px; font-size: .9rem; line-height: 1.5; }
+  .install-steps li { margin-bottom: 6px; }
   header.app .menu-btn { font-weight: 700; }
 
   /* ---------- Guide / index overlay ---------- */
@@ -489,6 +491,7 @@
 <header class="app">
   <span class="title">ADHD &amp; Executive Function Tool</span>
   <div class="hdr-btns">
+    <button class="menu-btn" id="installBtn" aria-label="Add to home screen" title="Add to home screen" style="display:none;">&#x2913;</button>
     <button class="menu-btn" id="helpBtn" aria-label="Guide">?</button>
     <button class="menu-btn" id="menuBtn" aria-label="Menu">&#9881;</button>
   </div>
@@ -2177,6 +2180,46 @@ function initReminders() {
 }
 
 /* =====================================================================
+   ADD TO HOME SCREEN  — header button (install / how-to)
+   ===================================================================== */
+function initInstall() {
+  const btn = document.getElementById("installBtn");
+  if (!btn) return;
+  const ua = navigator.userAgent || "";
+  const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); // iPadOS reports as Mac
+  const isAndroid = /android/i.test(ua);
+  const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
+  if (standalone) return;   // already added; no need to nudge
+
+  let deferred = null;
+  // Chrome fires this only when the site is installable (needs a service worker); capture it for true one-tap install
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; btn.style.display = ""; });
+  window.addEventListener("appinstalled", () => { btn.style.display = "none"; deferred = null; });
+
+  // on mobile we always show the button: native prompt when offered, otherwise platform instructions
+  if (isIOS || isAndroid) btn.style.display = "";
+
+  btn.onclick = async () => {
+    if (deferred) {
+      deferred.prompt();
+      try { await deferred.userChoice; } catch (e) {}
+      deferred = null; btn.style.display = "none";
+      return;
+    }
+    showInstallHelp(isIOS);
+  };
+}
+function showInstallHelp(isIOS) {
+  const steps = isIOS
+    ? 'In Safari:<ol class="install-steps"><li>Tap the <b>Share</b> button (the square with an arrow pointing up).</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol>'
+    : 'In your browser:<ol class="install-steps"><li>Open the browser menu (usually the three dots).</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li><li>Confirm.</li></ol>';
+  modalHTML("Add to your home screen",
+    '<p class="muted small" style="margin-top:0;">It opens full screen like an app, and your data stays on your device.</p>' + steps +
+    '<div class="modal-actions"><button class="btn primary" id="installOk" style="flex:1;">Got it</button></div>',
+    () => { document.getElementById("installOk").onclick = closeModal; });
+}
+
+/* =====================================================================
    PAUSE / urge-surfing tool  — v4 (in-the-moment impulse delay)
    ===================================================================== */
 const URGES = [
@@ -2467,6 +2510,7 @@ document.getElementById("footFeedback").href = feedbackHref();
 document.getElementById("footTips").onclick = (e) => { e.preventDefault(); openTips(); };
 initFocusFromState();
 initReminders();
+initInstall();
 renderAll();
 if (loadCorrupt) showStoreWarning(
   "Some of your saved data could not be read, so the tool started fresh. A copy of the unreadable data has been kept on this device in case it can be recovered. If you have a backup file, you can restore it from Settings.",
