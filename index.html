@@ -296,6 +296,12 @@
   /* toast */
   .toast { position: fixed; left: 50%; bottom: 96px; transform: translateX(-50%) translateY(10px); background: var(--ink); color: var(--surface); padding: 10px 16px; border-radius: 999px; font-size: .9rem; font-weight: 600; box-shadow: var(--shadow); opacity: 0; pointer-events: none; transition: opacity .2s, transform .2s; z-index: 70; max-width: 90vw; text-align: center; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .store-warn { position: fixed; top: 0; left: 0; right: 0; z-index: 200; background: var(--now, #b3261e); color: #fff; padding: 12px 16px; font-size: .9rem; line-height: 1.45; box-shadow: 0 2px 10px rgba(0,0,0,.25); display: none; }
+  .store-warn.show { display: block; }
+  .store-warn .sw-inner { max-width: 640px; margin: 0 auto; display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
+  .store-warn .sw-msg { flex: 1; min-width: 220px; }
+  .store-warn .sw-act { background: #fff; color: var(--now, #b3261e); border: none; border-radius: 999px; padding: 7px 14px; font-weight: 700; font-size: .85rem; cursor: pointer; font-family: inherit; }
+  .store-warn .sw-dismiss { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,.6); border-radius: 999px; padding: 7px 12px; font-weight: 600; font-size: .85rem; cursor: pointer; font-family: inherit; }
 
   /* ---------- Problem solver ---------- */
   .solver-step-lbl { font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .6px; color: var(--c-tasks); margin: 18px 0 6px; }
@@ -807,13 +813,15 @@ const defaultState = () => ({
   settings: { theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "" }   // theme: 'vibrant' | 'calm'
 });
 
+let loadCorrupt = false;   // set if saved data was unreadable on boot; surfaces a warning after render (declared before load() runs to avoid a TDZ throw)
 let state = load();
 let viewDate = todayKey();
 let plannerMode = "today";   // 'today' | 'template'
 
 function load() {
+  let raw = null;
   try {
-    const raw = localStorage.getItem(STORE_KEY);
+    raw = localStorage.getItem(STORE_KEY);
     if (!raw) return defaultState();
     const parsed = JSON.parse(raw);
     const d = defaultState();
@@ -837,11 +845,57 @@ function load() {
     if (!Array.isArray(s.attention.attempts)) s.attention.attempts = [];
     s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "" }, s.settings || {});
     return s;
-  } catch (e) { return defaultState(); }
+  } catch (e) {
+    // Unreadable saved data. Don't let the next save() overwrite it: set a timestamped
+    // copy aside so it can still be recovered, then start fresh and warn the user.
+    try { if (raw) localStorage.setItem(STORE_KEY + ".corrupt." + Date.now(), raw); } catch (_) {}
+    loadCorrupt = true;
+    return defaultState();
+  }
 }
+let saveWarned = false;   // true while saves are failing (private mode / quota), so we warn once and recover once
 function save() {
-  try { localStorage.setItem(STORE_KEY, JSON.stringify(state)); } catch (e) {}
+  try {
+    localStorage.setItem(STORE_KEY, JSON.stringify(state));
+    if (saveWarned) { saveWarned = false; hideStoreWarning(); }
+    return true;
+  } catch (e) {
+    if (!saveWarned) {
+      saveWarned = true;
+      showStoreWarning(
+        "Your changes are not being saved on this device. You may be in private or incognito browsing, or storage may be full. Download a backup now so you don't lose your work.",
+        { action: "Download backup", onAction: exportData }
+      );
+    }
+    return false;
+  }
 }
+/* persistent, dismissible warning bar for storage problems (data-loss guard) */
+let storeWarnEl = null;
+function storeWarnBar() {
+  if (storeWarnEl) return storeWarnEl;
+  storeWarnEl = document.createElement("div");
+  storeWarnEl.className = "store-warn";
+  storeWarnEl.setAttribute("role", "alert");
+  document.body.appendChild(storeWarnEl);
+  return storeWarnEl;
+}
+function showStoreWarning(msg, opts) {
+  opts = opts || {};
+  const bar = storeWarnBar();
+  bar.innerHTML = '<div class="sw-inner"><span class="sw-msg"></span>' +
+    (opts.action ? '<button class="sw-act" type="button"></button>' : '') +
+    '<button class="sw-dismiss" type="button">Dismiss</button></div>';
+  bar.querySelector(".sw-msg").textContent = msg;
+  if (opts.action) {
+    const a = bar.querySelector(".sw-act");
+    a.textContent = opts.action;
+    a.onclick = opts.onAction || null;
+  }
+  bar.querySelector(".sw-dismiss").onclick = () => bar.classList.remove("show");
+  bar.classList.add("show");
+}
+function hideStoreWarning() { if (storeWarnEl) storeWarnEl.classList.remove("show"); }
 function uid() { return "id" + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4); }
 
 /* ---------- Date helpers ---------- */
@@ -2405,7 +2459,11 @@ document.getElementById("footTips").onclick = (e) => { e.preventDefault(); openT
 initFocusFromState();
 initReminders();
 renderAll();
-if (!state.settings.seenGuide) openGuide();   // show the index on first visit
+if (loadCorrupt) showStoreWarning(
+  "Some of your saved data could not be read, so the tool started fresh. A copy of the unreadable data has been kept on this device in case it can be recovered. If you have a backup file, you can restore it from Settings.",
+  {}
+);
+if (!loadCorrupt && !state.settings.seenGuide) openGuide();   // show the index on first visit
 // keep the "now" line, countdowns and current-block banner live
 setInterval(() => { if (document.getElementById("panel-plan").classList.contains("active")) renderPlanner(); }, 30000);
 </script>
