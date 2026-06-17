@@ -2188,6 +2188,8 @@ function initInstall() {
   const ua = navigator.userAgent || "";
   const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); // iPadOS reports as Mac
   const isAndroid = /android/i.test(ua);
+  // on iOS, only Safari can add to the home screen; Firefox/Chrome/Edge/Opera cannot, by Apple's restriction
+  const iosNonSafari = isIOS && /CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser|mercury|DuckDuckGo/i.test(ua);
   const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
   if (standalone) return;   // already added; no need to nudge
 
@@ -2206,13 +2208,18 @@ function initInstall() {
       deferred = null; btn.style.display = "none";
       return;
     }
-    showInstallHelp(isIOS);
+    showInstallHelp(isIOS, iosNonSafari);
   };
 }
-function showInstallHelp(isIOS) {
-  const steps = isIOS
-    ? 'In Safari:<ol class="install-steps"><li>Tap the <b>Share</b> button (the square with an arrow pointing up).</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol>'
-    : 'In your browser:<ol class="install-steps"><li>Open the browser menu (usually the three dots).</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li><li>Confirm.</li></ol>';
+function showInstallHelp(isIOS, iosNonSafari) {
+  let steps;
+  if (iosNonSafari) {
+    steps = 'On iPhone and iPad, adding to the home screen only works in <b>Safari</b>, not in this browser.<ol class="install-steps"><li>Open this page in Safari (in your browser\'s menu, choose <b>Open in Safari</b>, or type <b>tools.draanashah.com</b> into Safari).</li><li>In Safari, tap the <b>Share</b> button, then <b>Add to Home Screen</b>.</li></ol>';
+  } else if (isIOS) {
+    steps = 'In Safari:<ol class="install-steps"><li>Tap the <b>Share</b> button (the square with an arrow pointing up).</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol>';
+  } else {
+    steps = 'In your browser:<ol class="install-steps"><li>Open the browser menu (usually the three dots).</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li><li>Confirm.</li></ol>';
+  }
   modalHTML("Add to your home screen",
     '<p class="muted small" style="margin-top:0;">It opens full screen like an app, and your data stays on your device.</p>' + steps +
     '<div class="modal-actions"><button class="btn primary" id="installOk" style="flex:1;">Got it</button></div>',
