@@ -1,0 +1,15 @@
+{
+  "name": "ADHD & Executive Function Tool",
+  "short_name": "Focus Tool",
+  "description": "Plan the day, break big tasks into small steps, and focus in short bursts. Private and offline. By Dr Aana Shah.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2f9e72",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
