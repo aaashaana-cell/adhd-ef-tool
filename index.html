@@ -221,12 +221,20 @@
   .cat-swatch[data-k=""] { background: var(--surface); position: relative; }
   .cat-swatch[data-k=""]::after { content: "—"; position: absolute; inset: 0; display: grid; place-items: center; color: var(--muted); }
   .cat-swatch.on { border-color: var(--ink); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .ex-hint { font-size: .78rem; color: var(--muted); margin: 8px 0 4px; }
+  .ex-row { display: flex; flex-wrap: wrap; gap: 6px; }
+  .ex-chip { font-size: .8rem; padding: 5px 11px; border-radius: 999px; border: 1px solid var(--line); background: var(--surface); color: var(--ink); cursor: pointer; }
+  .ex-chip:hover { border-color: var(--accent); }
   .remind-row { display: flex; align-items: center; gap: 10px; margin-top: 12px; font-size: .9rem; color: var(--muted); }
   .remind-row .chk { width: 22px; height: 22px; flex-shrink: 0; accent-color: var(--primary); }
   .rest-nudge { display: flex; align-items: flex-start; gap: 10px; margin-top: 12px; padding: 12px 14px; border-radius: 12px; background: var(--accent-soft); color: var(--ink); font-size: .9rem; line-height: 1.45; }
   .rest-nudge .rest-text { flex: 1; }
   .rest-nudge .rest-add { display: inline-block; margin-top: 4px; background: none; border: none; color: var(--accent); font-weight: 700; font-size: .9rem; cursor: pointer; padding: 0; }
   .rest-nudge .rest-dismiss { flex-shrink: 0; background: none; border: none; color: var(--muted); font-size: 1rem; line-height: 1; cursor: pointer; padding: 2px 4px; }
+  .nudge-why { margin-top: 6px; font-size: .82rem; color: var(--muted); line-height: 1.45; }
+  .nudge-why summary { cursor: pointer; font-weight: 700; color: var(--accent); list-style: revert; }
+  .nudge-why[open] summary { margin-bottom: 4px; }
+  .nudge-cite { font-style: italic; opacity: .8; }
   .wrap-line { font-size: 1.05rem; line-height: 1.5; margin: 0 0 12px; }
   .wrap-wins { list-style: none; margin: 4px 0 16px; padding: 0; }
   .wrap-wins li { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-bottom: 1px solid var(--line); font-size: 1rem; }
@@ -563,6 +571,20 @@
     <div class="rest-nudge" id="restNudge" style="display:none;">
       <div class="rest-text">No downtime planned today. Even a short rest block helps you keep going. <button class="rest-add" id="restAdd">Add a rest block</button></div>
       <button class="rest-dismiss" id="restDismiss" aria-label="Dismiss" title="Dismiss for today">&#10005;</button>
+    </div>
+
+    <div class="rest-nudge" id="switchNudge" style="display:none;">
+      <div class="rest-text">Today's split into a lot of short blocks. If it suits you, try protecting one longer stretch for your most demanding task.
+        <details class="nudge-why"><summary>Why this matters</summary>Switching tasks isn't free. Each switch leaves "attention residue", where part of your mind stays on the previous task while your brain re-engages with the new one. A fragmented day quietly taxes focus. Longer, single-topic blocks cut that overhead, which is why some people, and many ADHD brains especially, do their best work in one protected stretch. <span class="nudge-cite">(Leroy, 2009; Ashinoff &amp; Abu-Akel, 2021)</span></details>
+      </div>
+      <button class="rest-dismiss" id="switchDismiss" aria-label="Dismiss" title="Dismiss for today">&#10005;</button>
+    </div>
+
+    <div class="rest-nudge" id="recoveryNudge" style="display:none;">
+      <div class="rest-text">That's a lot packed into today. Demanding days need recovery built in, not just squeezed out at the end. <button class="rest-add" id="recoveryAdd">Add a recovery block</button>
+        <details class="nudge-why"><summary>Why this matters</summary>Sustained focus, decision-making and self-regulation draw on the same limited mental energy, which fatigues with use across a day. Deliberate recovery, such as movement, rest, quiet, or time on something absorbing, is how that capacity refills, rather than carrying depletion into tomorrow. <span class="nudge-cite">(Boksem &amp; Tops, 2008; Sonnentag, 2008, and others)</span></details>
+      </div>
+      <button class="rest-dismiss" id="recoveryDismiss" aria-label="Dismiss" title="Dismiss for today">&#10005;</button>
     </div>
 
     <div class="row" style="margin-top:6px;">
@@ -968,9 +990,17 @@ function renderPlanner() {
     blocksEl.appendChild(el);
   });
 
-  // gentle nudge to protect recharge time (today view, has blocks, but no rest block)
+  // gentle nudges (today view): recovery (busy day) > switching/fragmentation > protect recharge time. At most one shows.
   const restNudge = document.getElementById("restNudge");
-  const restOK = isToday && list.length && !hasRestBlock(list) && state.settings.restNudgeDismissed !== todayKey();
+  const tk = todayKey();
+  const durs = list.map(b => hmToMin(b.end) - hmToMin(b.start)).filter(d => d > 0);
+  const shortCount = durs.filter(d => d < 30).length;
+  const longest = durs.length ? Math.max.apply(null, durs) : 0;
+  const recoveryOK = isToday && list.length >= 8 && state.settings.recoveryNudgeDismissed !== tk;
+  const switchOK = !recoveryOK && isToday && list.length >= 5 && shortCount >= 3 && longest < 90 && state.settings.switchNudgeDismissed !== tk;
+  const restOK = !recoveryOK && !switchOK && isToday && list.length && !hasRestBlock(list) && state.settings.restNudgeDismissed !== tk;
+  document.getElementById("recoveryNudge").style.display = recoveryOK ? "flex" : "none";
+  document.getElementById("switchNudge").style.display = switchOK ? "flex" : "none";
   restNudge.style.display = restOK ? "flex" : "none";
 
   renderCurrentBanner(list, isToday, now);
@@ -1031,31 +1061,40 @@ function deleteBlock(id) {
   });
 }
 
-function openBlockEditor(id) {
+const RECOVERY_EXAMPLES = ["Walk / movement", "Stretch", "Step outside", "Quiet / lie down", "Snack + water", "Music", "Something absorbing"];
+function openBlockEditor(id, opts) {
+  opts = opts || {};
   const list = ensureDayCopy();
   const existing = id ? list.find(b => b.id === id) : null;
+  const recovery = !existing && !!opts.recovery;   // example chips + preset Rest colour, only from the rest/recovery nudges
+  const presetCat = existing ? (existing.cat || "") : (recovery ? "break" : "");
   const start = existing ? existing.start : suggestNextStart(list);
   const end = existing ? existing.end : minToHM(hmToMin(start) + 30);
   modalHTML(
     (existing ? "Edit block" : "New block"),
     '<div class="field"><label>What is it?</label><input id="bLabel" type="text" placeholder="e.g. Emails, Deep work, Walk" value="'+ (existing ? esc(existing.label) : "") +'"></div>' +
+    (recovery ? '<div class="ex-hint">Not sure what counts? Tap one, or type your own:</div><div class="ex-row">' +
+      RECOVERY_EXAMPLES.map(x => '<button type="button" class="ex-chip">' + esc(x) + '</button>').join("") + '</div>' : '') +
     '<div class="row wrap">' +
       '<div class="field" style="flex:1;min-width:130px;"><label>Start</label><input id="bStart" type="time" value="'+ start +'"></div>' +
       '<div class="field" style="flex:1;min-width:130px;"><label>End</label><input id="bEnd" type="time" value="'+ end +'"></div>' +
     '</div>' +
     '<div class="field"><label>Work on a task (optional)</label><select id="bTask">' + taskOptionsHTML(existing ? existing.taskId : "") + '</select></div>' +
     '<div class="field"><label>Colour (optional)</label><div class="cat-row">' +
-      BLOCK_CATS.map(c => '<button type="button" class="cat-swatch' + ((existing && existing.cat || "") === c.key ? " on" : "") + '" data-k="' + c.key + '" style="--sw:' + c.v + ';" title="' + c.label + '"></button>').join("") +
+      BLOCK_CATS.map(c => '<button type="button" class="cat-swatch' + (presetCat === c.key ? " on" : "") + '" data-k="' + c.key + '" style="--sw:' + c.v + ';" title="' + c.label + '"></button>').join("") +
     '</div></div>' +
     '<div class="modal-actions">' +
       '<button class="btn ghost" id="bCancel">Cancel</button>' +
       '<button class="btn primary" id="bSave">Save</button>' +
     '</div>',
     () => {
-      let cat = existing && existing.cat || "";
+      let cat = presetCat;
       modalEl.querySelectorAll(".cat-swatch").forEach(sw => sw.onclick = () => {
         cat = sw.dataset.k;
         modalEl.querySelectorAll(".cat-swatch").forEach(x => x.classList.toggle("on", x === sw));
+      });
+      modalEl.querySelectorAll(".ex-chip").forEach(chip => chip.onclick = () => {
+        document.getElementById("bLabel").value = chip.textContent;
       });
       document.getElementById("bCancel").onclick = closeModal;
       document.getElementById("bSave").onclick = () => {
@@ -1080,8 +1119,11 @@ function suggestNextStart(list) {
 function hasRestBlock(list) {
   return list.some(b => b.cat === "break" || /\b(rest|break|lunch|relax|recharge|nap|walk|downtime|chill)\b/i.test(b.label || ""));
 }
-document.getElementById("restAdd").onclick = () => openBlockEditor(null);
+document.getElementById("restAdd").onclick = () => openBlockEditor(null, { recovery: true });
 document.getElementById("restDismiss").onclick = () => { state.settings.restNudgeDismissed = todayKey(); save(); document.getElementById("restNudge").style.display = "none"; };
+document.getElementById("switchDismiss").onclick = () => { state.settings.switchNudgeDismissed = todayKey(); save(); document.getElementById("switchNudge").style.display = "none"; };
+document.getElementById("recoveryDismiss").onclick = () => { state.settings.recoveryNudgeDismissed = todayKey(); save(); document.getElementById("recoveryNudge").style.display = "none"; };
+document.getElementById("recoveryAdd").onclick = () => openBlockEditor(null, { recovery: true });
 document.getElementById("wrapUpBtn").onclick = openWrapUp;
 
 /* end-of-day wrap-up: what you did, permission to stop, carries over, recharge */
