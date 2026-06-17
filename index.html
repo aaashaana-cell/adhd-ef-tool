@@ -2165,6 +2165,8 @@ function initReminders() {
     } else { state.settings.reminders = false; save(); }
   };
   setInterval(checkReminders, 20000);
+  // the interval is throttled or paused while the tab is hidden, so re-check the moment it regains focus
+  document.addEventListener("visibilitychange", () => { if (!document.hidden) checkReminders(); });
 }
 
 /* =====================================================================
