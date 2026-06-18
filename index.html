@@ -394,6 +394,14 @@
   .ring.break-mode { background: conic-gradient(var(--accent) calc(var(--pct)*1%), var(--line) 0); }
   .ring.running .inner { box-shadow: 0 0 0 2px var(--accent-soft); animation: ringpulse 2s ease-in-out infinite; }
   @keyframes ringpulse { 0%,100% { box-shadow: 0 0 0 2px var(--accent-soft); } 50% { box-shadow: 0 0 0 6px var(--accent-soft); } }
+  /* optional breathing anchor: a slow, calm pulse while the timer runs (opt-in) */
+  @keyframes ringBreathe {
+    0%, 100% { box-shadow: 0 0 14px 2px var(--accent-soft); transform: scale(.985); }
+    50%      { box-shadow: 0 0 42px 15px var(--accent-soft); transform: scale(1.025); }
+  }
+  .ring.running.breathe-on { animation: ringBreathe 11s ease-in-out infinite; }
+  .ring.running.breathe-on .inner { animation: none; box-shadow: 0 0 0 2px var(--accent-soft); }
+  @media (prefers-reduced-motion: reduce) { .ring.running.breathe-on { animation: none !important; transform: none !important; } }
   .ring .inner { width: 188px; height: 188px; border-radius: 50%; background: var(--surface); display: grid; place-items: center; }
   .pomo-count { font-size: .85rem; color: var(--muted); }
   .pomo-task-pill { display: inline-block; background: var(--accent-soft); color: var(--accent); padding: 4px 10px; border-radius: 999px; font-weight: 600; font-size: .85rem; }
@@ -703,6 +711,10 @@
           <input type="checkbox" id="chimeOn" class="chk" checked>
           <label for="chimeOn" style="font-size:1rem; color:var(--ink);">Play a chime when a session ends</label>
         </div>
+        <div class="field inline">
+          <input type="checkbox" id="breatheToggle" class="chk">
+          <label for="breatheToggle" style="font-size:1rem; color:var(--ink);">Breathing anchor: a slow, steady pulse on the ring while you work</label>
+        </div>
         <button class="btn ghost" id="openAttention" style="width:100%; margin-top:6px; height:auto; padding:10px 14px; color:var(--c-focus); border-color:var(--line);">Not sure how long to work for? Measure your focus span</button>
       </div>
     </div>
@@ -834,7 +846,7 @@ const defaultState = () => ({
   problemSolver: { problem: "", solutions: [], chosenId: "" },  // v3: guided problem solving (single draft)
   parkingLot: [],            // v3: [{ id, text }] distractions parked during a focus session
   attention: { attempts: [] },// v3: recent focus-length samples in seconds
-  settings: { theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "", hiddenTabs: [], quietExtras: false }   // theme: 'vibrant' | 'calm'
+  settings: { theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "", hiddenTabs: [], quietExtras: false, focusBreathe: false }   // theme: 'vibrant' | 'calm'
 });
 
 let loadCorrupt = false;   // set if saved data was unreadable on boot; surfaces a warning after render (declared before load() runs to avoid a TDZ throw)
@@ -867,7 +879,7 @@ function load() {
     if (!Array.isArray(s.parkingLot)) s.parkingLot = [];
     s.attention = Object.assign({ attempts: [] }, s.attention || {});
     if (!Array.isArray(s.attention.attempts)) s.attention.attempts = [];
-    s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "", hiddenTabs: [], quietExtras: false }, s.settings || {});
+    s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "", hiddenTabs: [], quietExtras: false, focusBreathe: false }, s.settings || {});
     if (!Array.isArray(s.settings.hiddenTabs)) s.settings.hiddenTabs = [];
     return s;
   } catch (e) {
@@ -1498,7 +1510,13 @@ function initFocusFromState() {
   timer.remaining = phaseSeconds(timer.phase);
   paintTimer();
   updatePomoCount();
+  document.getElementById("breatheToggle").checked = !!state.settings.focusBreathe;
+  applyFocusBreathe();
 }
+function applyFocusBreathe() { ringEl.classList.toggle("breathe-on", !!state.settings.focusBreathe); }
+document.getElementById("breatheToggle").onchange = (e) => {
+  state.settings.focusBreathe = e.target.checked; save(); applyFocusBreathe();
+};
 workMinInput.onchange = () => {
   state.pomodoro.workMin = clampInt(workMinInput.value, 1, 120, 25); workMinInput.value = state.pomodoro.workMin;
   save(); if (!timer.running && timer.phase === "work") { timer.remaining = phaseSeconds("work"); paintTimer(); }
