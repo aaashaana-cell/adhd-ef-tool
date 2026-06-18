@@ -2220,7 +2220,7 @@ function showInstallHelp(isIOS, iosNonSafari) {
     steps = 'In your browser:<ol class="install-steps"><li>Open the browser menu, or tap the <b>Share</b> button.</li><li>Tap <b>Add to Home screen</b> (or <b>Install app</b>).</li><li>Confirm.</li></ol>';
   }
   modalHTML("Add to your home screen",
-    '<p class="muted small" style="margin-top:0;">It opens full screen.</p>' + steps +
+    '<p class="muted small" style="margin-top:0;">Opens full screen, like an app. Your data stays on your device.</p>' + steps +
     '<div class="modal-actions"><button class="btn primary" id="installOk" style="flex:1;">Got it</button></div>',
     () => { document.getElementById("installOk").onclick = closeModal; });
 }
