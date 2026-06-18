@@ -405,6 +405,7 @@
     background: var(--surface); width: 100%; max-width: 480px; border-radius: 16px 16px 0 0;
     padding: 18px 16px calc(18px + env(safe-area-inset-bottom)); box-shadow: 0 -4px 24px rgba(38,40,44,.16);
     animation: slideUp .2s ease;
+    max-height: 92vh; max-height: 92dvh; overflow-y: auto; -webkit-overflow-scrolling: touch;
   }
   @keyframes slideUp { from { transform: translateY(20px); opacity: .6; } to { transform: none; opacity: 1; } }
   @media (min-width: 520px) {
