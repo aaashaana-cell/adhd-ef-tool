@@ -2213,15 +2213,14 @@ function initInstall() {
 }
 function showInstallHelp(isIOS, iosNonSafari) {
   let steps;
-  if (iosNonSafari) {
-    steps = 'On iPhone and iPad, adding to the home screen only works in <b>Safari</b>, not in this browser.<ol class="install-steps"><li>Open this page in Safari (in your browser\'s menu, choose <b>Open in Safari</b>, or type <b>tools.draanashah.com</b> into Safari).</li><li>In Safari, tap the <b>Share</b> button, then <b>Add to Home Screen</b>.</li></ol>';
-  } else if (isIOS) {
-    steps = 'In Safari:<ol class="install-steps"><li>Tap the <b>Share</b> button (the square with an arrow pointing up).</li><li>Scroll down and tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol>';
+  if (isIOS) {
+    const note = iosNonSafari ? '<p class="muted small" style="margin:0 0 8px;">Works best in Safari, but you can add it from here too:</p>' : '';
+    steps = note + '<ol class="install-steps"><li>Tap the <b>Share</b> button (the square with an arrow pointing up).</li><li>Tap <b>Add to Home Screen</b>.</li><li>Tap <b>Add</b>.</li></ol>';
   } else {
-    steps = 'In your browser:<ol class="install-steps"><li>Open the browser menu (usually the three dots).</li><li>Tap <b>Install app</b> or <b>Add to Home screen</b>.</li><li>Confirm.</li></ol>';
+    steps = 'In your browser:<ol class="install-steps"><li>Open the browser menu, or tap the <b>Share</b> button.</li><li>Tap <b>Add to Home screen</b> (or <b>Install app</b>).</li><li>Confirm.</li></ol>';
   }
   modalHTML("Add to your home screen",
-    '<p class="muted small" style="margin-top:0;">It opens full screen like an app, and your data stays on your device.</p>' + steps +
+    '<p class="muted small" style="margin-top:0;">It opens full screen.</p>' + steps +
     '<div class="modal-actions"><button class="btn primary" id="installOk" style="flex:1;">Got it</button></div>',
     () => { document.getElementById("installOk").onclick = closeModal; });
 }
