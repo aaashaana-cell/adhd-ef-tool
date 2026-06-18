@@ -2223,18 +2223,20 @@ function initInstall() {
   const ua = navigator.userAgent || "";
   const isIOS = /iphone|ipad|ipod/i.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1); // iPadOS reports as Mac
   const isAndroid = /android/i.test(ua);
+  const isMobile = isIOS || isAndroid;   // this is a phone-first tool; keep the button to mobile only
   // on iOS, only Safari can add to the home screen; Firefox/Chrome/Edge/Opera cannot, by Apple's restriction
   const iosNonSafari = isIOS && /CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser|mercury|DuckDuckGo/i.test(ua);
   const standalone = (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches) || navigator.standalone === true;
   if (standalone) return;   // already added; no need to nudge
 
   let deferred = null;
-  // Chrome fires this only when the site is installable (needs a service worker); capture it for true one-tap install
-  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; btn.style.display = ""; });
+  // Capture the install event for the Android one-tap path, but only surface the button on mobile.
+  // Desktop Chromium (Arc/Chrome/Edge) also fires this now that the app is an installable PWA; we don't show it there.
+  window.addEventListener("beforeinstallprompt", (e) => { e.preventDefault(); deferred = e; if (isMobile) btn.style.display = ""; });
   window.addEventListener("appinstalled", () => { btn.style.display = "none"; deferred = null; });
 
   // on mobile we always show the button: native prompt when offered, otherwise platform instructions
-  if (isIOS || isAndroid) btn.style.display = "";
+  if (isMobile) btn.style.display = "";
 
   btn.onclick = async () => {
     if (deferred) {
