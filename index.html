@@ -2526,6 +2526,10 @@ if (loadCorrupt) showStoreWarning(
 if (!loadCorrupt && !state.settings.seenGuide) openGuide();   // show the index on first visit
 // keep the "now" line, countdowns and current-block banner live
 setInterval(() => { if (document.getElementById("panel-plan").classList.contains("active")) renderPlanner(); }, 30000);
+// register the service worker (offline support + installability); harmless if unsupported
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => { navigator.serviceWorker.register("sw.js").catch(() => {}); });
+}
 </script>
 <!-- Anonymous, cookieless visit counter (GoatCounter). Counts page views only; no personal data, no cookies; the data you enter never leaves your device. -->
 <script data-goatcounter="https://draanashah.goatcounter.com/count"
