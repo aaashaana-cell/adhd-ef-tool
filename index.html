@@ -350,6 +350,19 @@
     box-shadow: -2px 2px 10px rgba(20,36,27,.2); }
   body.pause-hidden .pause-dock { display: none; }
   body.pause-hidden .pause-restore { display: block; }
+  /* Simplify panel */
+  .simp-head { font-size: .72rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--muted); margin: 16px 0 2px; }
+  .simp-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 11px 0; border-bottom: 1px solid var(--line); }
+  .simp-sub { font-size: .78rem; color: var(--muted); margin-top: 2px; }
+  .simp-min { display: flex; align-items: center; justify-content: space-between; gap: 12px; background: var(--accent-soft); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; margin-bottom: 8px; }
+  .sw { position: relative; width: 42px; height: 25px; flex: none; display: inline-block; }
+  .sw input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 2; }
+  .sw .track { position: absolute; inset: 0; background: var(--line); border-radius: 999px; transition: background .15s; }
+  .sw .knob { position: absolute; top: 3px; left: 3px; width: 19px; height: 19px; border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(0,0,0,.25); transition: left .15s; }
+  .sw input:checked ~ .track { background: var(--primary); }
+  .sw input:checked ~ .knob { left: 20px; }
+  body.quiet-extras #restNudge, body.quiet-extras #switchNudge, body.quiet-extras #recoveryNudge,
+  body.quiet-extras #currentBanner, body.quiet-extras .pause-dock, body.quiet-extras .pause-restore { display: none !important; }
   .pause-overlay { position: fixed; inset: 0; z-index: 60; background: var(--bg); overflow-y: auto; display: none; }
   .pause-overlay.open { display: block; }
   .pause-inner { max-width: 560px; margin: 0 auto; padding: 22px 18px calc(30px + env(safe-area-inset-bottom)); min-height: 100%; display: flex; flex-direction: column; }
@@ -820,7 +833,7 @@ const defaultState = () => ({
   problemSolver: { problem: "", solutions: [], chosenId: "" },  // v3: guided problem solving (single draft)
   parkingLot: [],            // v3: [{ id, text }] distractions parked during a focus session
   attention: { attempts: [] },// v3: recent focus-length samples in seconds
-  settings: { theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "" }   // theme: 'vibrant' | 'calm'
+  settings: { theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "", hiddenTabs: [], quietExtras: false }   // theme: 'vibrant' | 'calm'
 });
 
 let loadCorrupt = false;   // set if saved data was unreadable on boot; surfaces a warning after render (declared before load() runs to avoid a TDZ throw)
@@ -853,7 +866,8 @@ function load() {
     if (!Array.isArray(s.parkingLot)) s.parkingLot = [];
     s.attention = Object.assign({ attempts: [] }, s.attention || {});
     if (!Array.isArray(s.attention.attempts)) s.attention.attempts = [];
-    s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "" }, s.settings || {});
+    s.settings = Object.assign({ theme: "vibrant", seenGuide: false, reminders: false, pauseHidden: false, restNudgeDismissed: "", hiddenTabs: [], quietExtras: false }, s.settings || {});
+    if (!Array.isArray(s.settings.hiddenTabs)) s.settings.hiddenTabs = [];
     return s;
   } catch (e) {
     // Unreadable saved data. Don't let the next save() overwrite it: set a timestamped
@@ -2241,6 +2255,63 @@ let pauseUrge = null, pauseTimerId = null, pauseCueId = null, pauseLeft = 0;
 document.getElementById("pauseBtn").onclick = openPause;
 /* minimize the floating button to a small edge tab (remembered) */
 function applyPauseDock() { document.body.classList.toggle("pause-hidden", !!state.settings.pauseHidden); }
+
+/* ---- Simplify: hide tabs / quiet the extras ---- */
+const SIMPLE_TABS = [
+  { k: "ifthen",  label: "If-Then plans" },
+  { k: "rewards", label: "Rewards" },
+  { k: "buddy",   label: "Buddy" }
+];
+function applyHiddenTabs() {
+  const hidden = state.settings.hiddenTabs || [];
+  document.querySelectorAll("nav.tabs button").forEach(b => {
+    b.style.display = hidden.indexOf(b.dataset.tab) > -1 ? "none" : "";
+  });
+  const active = document.querySelector("nav.tabs button.active");
+  if (active && hidden.indexOf(active.dataset.tab) > -1) switchTab("plan");
+}
+function applyQuietExtras() { document.body.classList.toggle("quiet-extras", !!state.settings.quietExtras); }
+function applySimplify() { applyHiddenTabs(); applyQuietExtras(); }
+
+function openSimplify() {
+  const hidden = state.settings.hiddenTabs || [];
+  const anyHidden = hidden.length > 0 || !!state.settings.quietExtras;
+  const sw = (id, on) => '<label class="sw"><input type="checkbox" id="' + id + '"' + (on ? " checked" : "") + '><span class="track"></span><span class="knob"></span></label>';
+  modalHTML("Simplify the app",
+    '<p class="muted small" style="margin-top:0;">Hide anything you don\'t use. You can switch it back on any time.</p>' +
+    '<div class="simp-min"><div><div style="font-weight:700;">Minimal mode</div><div class="simp-sub">Just Tasks, Plan and Focus</div></div>' +
+      '<button class="btn primary" id="simpMin">Apply</button></div>' +
+    (anyHidden ? '<button class="btn ghost" id="simpRestore" style="width:100%;">Restore everything</button>' : '') +
+    '<div class="simp-head">Tabs</div>' +
+    '<div class="simp-row"><span style="color:var(--muted);">Tasks, Plan, Focus</span><span class="muted small">Always on</span></div>' +
+    SIMPLE_TABS.map(t => '<div class="simp-row"><span>' + t.label + '</span>' + sw("simpTab_" + t.k, hidden.indexOf(t.k) === -1) + '</div>').join("") +
+    '<div class="simp-head">Extras</div>' +
+    '<div class="simp-row"><div><div>Show the extras</div><div class="simp-sub">Planner nudges, the "right now" banner, and the Pause button</div></div>' + sw("simpExtras", !state.settings.quietExtras) + '</div>' +
+    '<div class="modal-actions"><button class="btn ghost" id="simpBack">Back</button><button class="btn primary" id="simpDone">Done</button></div>',
+    () => {
+      document.getElementById("simpBack").onclick = openMenu;
+      document.getElementById("simpDone").onclick = closeModal;
+      document.getElementById("simpMin").onclick = () => {
+        state.settings.hiddenTabs = SIMPLE_TABS.map(t => t.k);
+        state.settings.quietExtras = true;
+        save(); applySimplify(); openSimplify();
+      };
+      const r = document.getElementById("simpRestore");
+      if (r) r.onclick = () => { state.settings.hiddenTabs = []; state.settings.quietExtras = false; save(); applySimplify(); openSimplify(); };
+      SIMPLE_TABS.forEach(t => {
+        document.getElementById("simpTab_" + t.k).onchange = (e) => {
+          const set = new Set(state.settings.hiddenTabs || []);
+          if (e.target.checked) set.delete(t.k); else set.add(t.k);   // checked = visible
+          state.settings.hiddenTabs = Array.from(set);
+          save(); applyHiddenTabs();
+        };
+      });
+      document.getElementById("simpExtras").onchange = (e) => {
+        state.settings.quietExtras = !e.target.checked;   // checked = show extras
+        save(); applyQuietExtras();
+      };
+    });
+}
 document.getElementById("pauseMin").onclick = () => { state.settings.pauseHidden = true; save(); applyPauseDock(); };
 document.getElementById("pauseRestore").onclick = () => { state.settings.pauseHidden = false; save(); applyPauseDock(); };
 function openPause() { pauseUrge = null; pauseEl.classList.add("open"); pauseEl.scrollTop = 0; renderPauseName(); }
@@ -2412,6 +2483,9 @@ document.getElementById("menuBtn").onclick = openMenu;
 function openMenu() {
   const vib = state.settings.theme !== "calm";
   modalHTML("Settings & backup",
+    '<div class="panel-sub" style="margin-top:0;">Make it simpler</div>' +
+    '<button class="btn" id="mSimplify" style="width:100%; display:flex; justify-content:space-between; align-items:center;">Simplify the app<span style="opacity:.55;">&#8250;</span></button>' +
+    '<p class="muted small" style="margin:6px 0 14px;">Hide tabs and extras you don\'t use.</p>' +
     '<div class="panel-sub" style="margin-top:0;">Appearance</div>' +
     '<div class="theme-row">' +
       '<div class="theme-opt' + (vib ? " active" : "") + '" id="thVibrant">' +
@@ -2435,6 +2509,7 @@ function openMenu() {
     () => {
       document.getElementById("thVibrant").onclick = () => { setTheme("vibrant"); document.getElementById("thVibrant").classList.add("active"); document.getElementById("thCalm").classList.remove("active"); };
       document.getElementById("thCalm").onclick = () => { setTheme("calm"); document.getElementById("thCalm").classList.add("active"); document.getElementById("thVibrant").classList.remove("active"); };
+      document.getElementById("mSimplify").onclick = openSimplify;
       document.getElementById("mFeedback").href = feedbackHref();
       document.getElementById("mClose").onclick = closeModal;
       document.getElementById("mExport").onclick = exportData;
@@ -2512,6 +2587,7 @@ function renderAll() {
 }
 applyTheme();
 applyPauseDock();
+applySimplify();
 document.getElementById("footFeedback").href = feedbackHref();
 document.getElementById("footTips").onclick = (e) => { e.preventDefault(); openTips(); };
 initFocusFromState();
