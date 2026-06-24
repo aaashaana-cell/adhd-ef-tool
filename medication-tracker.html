@@ -74,6 +74,10 @@
       <div class="subhead full">Medication</div>
       <div class="field"><label for="date">Date</label><input type="date" id="date"></div>
       <div class="field"><label for="meds">Medication and dose taken</label><input type="text" id="meds" placeholder="e.g. 10mg SR morning, 5mg IR afternoon"></div>
+      <div class="field"><label for="adherence">Took it today?</label>
+        <select id="adherence"><option value="">&mdash;</option><option>Yes, as prescribed</option><option>Took it late</option><option>Missed a dose</option><option>Skipped on purpose</option><option>Stopped it</option></select></div>
+      <div class="field full"><label for="helps">Overall, does it help me feel calmer, more focused, and less impulsive?</label>
+        <select id="helps"><option value="">&mdash;</option><option>Yes</option><option>Somewhat</option><option>No</option><option>Not sure</option></select></div>
       <div class="field full"><label for="demands">Demands today (context)</label><input type="text" id="demands" placeholder="e.g. high - preparing for exams and studying"></div>
       <div class="field full"><p class="hint" style="margin:0;">This works for any ADHD medication, whether a stimulant or a non-stimulant such as atomoxetine, bupropion, clonidine, or an SSRI. Fill in what is relevant to you, and leave the rest blank.</p></div>
 
@@ -154,6 +158,7 @@
     <a href="symptom-check.html">ADHD symptom self-check<span>A monthly check-in (ASRS) to track how things change</span></a>
     <a href="understanding-adhd.html">Understanding ADHD: what your diagnosis means<span>A plain-language guide for the person with ADHD</span></a>
     <a href="sensory-tools.html">Sensory &amp; attention tools<span>Low-cost ideas for focus and sensory regulation</span></a>
+    <a href="treatment-response.html">ADHD medication review form<span>A scored check of how medication is working, for children, teens, and young adults</span></a>
     <a href="/">The planning and focus tool<span>Plan the day, break tasks down, focus in short bursts</span></a>
   </nav>
   <p class="pagefoot">Made by <a href="https://draanashah.com" rel="noopener">Dr Aana Shah</a> &middot; <a href="/">tools.draanashah.com</a></p>
@@ -164,7 +169,7 @@
 var KEY="medTracker.v1";
 var DAYS=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"];
 var COLS=[
-  ["date","Date"],["day","Day"],["meds","Medication and dose"],["demands","Demands"],
+  ["date","Date"],["day","Day"],["meds","Medication and dose"],["adherence","Took it today"],["helps","Helps overall"],["demands","Demands"],
   ["focus","Focus and attention"],["exec","Getting things done"],["memory","Remembering/keeping track"],["restless","Restlessness/impulsivity"],
   ["mood","Mood"],["anx","Anxiety"],["irrit","Irritability"],
   ["sidefx","Adverse effects"],["bp","Blood pressure"],["hr","Heart rate"],
@@ -223,7 +228,7 @@ function collectSideFx(){
   return fx.join("; ");
 }
 function clearForm(){
-  ["meds","demands","focus","exec","memory","restless","mood","anx","irrit","sleep","appetite","appTiming","sfOther","bp","hr","notes"].forEach(function(id){ $(id).value=""; });
+  ["meds","adherence","helps","demands","focus","exec","memory","restless","mood","anx","irrit","sleep","appetite","appTiming","sfOther","bp","hr","notes"].forEach(function(id){ $(id).value=""; });
   ["sfHeadache","sfPalp","sfNausea","sfDry","sfTics","sfCrash"].forEach(function(id){ $(id).checked=false; });
   $("date").value=todayISO();
 }
@@ -232,7 +237,7 @@ function addEntry(){
   if(!iso){ alert("Please pick a date."); return; }
   var entry={
     id:Date.now(), date:iso, day:dayName(iso),
-    meds:$("meds").value.trim(), demands:$("demands").value.trim(),
+    meds:$("meds").value.trim(), adherence:$("adherence").value, helps:$("helps").value, demands:$("demands").value.trim(),
     focus:$("focus").value, exec:$("exec").value, memory:$("memory").value, restless:$("restless").value,
     mood:$("mood").value, anx:$("anx").value, irrit:$("irrit").value,
     sidefx:collectSideFx(), bp:$("bp").value.trim(), hr:$("hr").value.trim(),

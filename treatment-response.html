@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icon-180.png">
+<title>ADHD treatment response tracker | Dr Aana Shah</title>
+<meta name="description" content="A simple form to track how ADHD medication is working, for parents/carers, teenagers, and young adults. Scores each review automatically and shows the response band. Stays on your device. By Dr Aana Shah.">
+<link rel="canonical" href="https://tools.draanashah.com/treatment-response.html">
+<link rel="stylesheet" href="assets/guide.css">
+<style>
+  .lead-note{background:var(--warn-soft); border-radius:12px; padding:13px 16px; margin-bottom:22px; font-size:.9rem; line-height:1.5; color:#7a4f24;}
+  .lead-note b{color:#5e3c1b;}
+  .card{background:var(--surface); border:1px solid var(--line); border-radius:14px; padding:18px 16px; margin-bottom:20px;}
+  .card h2{margin-top:0;}
+  .grid{display:grid; grid-template-columns:1fr 1fr; gap:12px 14px;}
+  .field{display:flex; flex-direction:column; gap:4px;}
+  .field.full{grid-column:1 / -1;}
+  label{font-size:.8rem; font-weight:600; color:var(--muted);}
+  input,select,textarea{font-family:inherit; font-size:1rem; color:var(--ink); border:1px solid var(--line); border-radius:9px; padding:9px 10px; background:#fff; width:100%;}
+  .moderow{display:flex; gap:10px; margin-bottom:20px;}
+  .modeopt{flex:1; border:2px solid var(--line); border-radius:12px; padding:12px 8px; text-align:center; font-weight:700; background:var(--surface); cursor:pointer; font-size:.95rem;}
+  .modeopt.on{border-color:var(--primary); background:var(--soft, #eef7f2); color:var(--primary-dark);}
+  .scale-head{display:flex; justify-content:space-between; align-items:baseline; gap:10px; flex-wrap:wrap; margin:2px 0 10px;}
+  .scale-head h2{margin:0;}
+  .subtotal{font-size:.95rem; font-weight:700; white-space:nowrap;}
+  .band{display:inline-block; padding:2px 10px; border-radius:999px; font-size:.8rem; font-weight:700; margin-left:6px;}
+  .band.A{background:#e1f3e9; color:#1f7a4d;} .band.B{background:#e3eefc; color:#1a5fa5;}
+  .band.C{background:#fbeedd; color:#8a5410;} .band.D{background:#fbe5e5; color:#a33;}
+  .item{padding:12px 0; border-bottom:1px solid var(--line);}
+  .item:last-child{border-bottom:none;}
+  .item-q{font-size:.95rem; margin-bottom:8px; line-height:1.4;}
+  .item-q .n{color:var(--muted); font-weight:700; margin-right:6px;}
+  .opts{display:flex; gap:6px; flex-wrap:wrap;}
+  .opt{flex:1; min-width:74px;}
+  .opt input{position:absolute; opacity:0; pointer-events:none;}
+  .opt span{display:block; text-align:center; border:1px solid var(--line); border-radius:9px; padding:8px 4px; font-size:.8rem; line-height:1.2; cursor:pointer; color:var(--ink); background:#fff;}
+  .opt input:checked + span{background:var(--primary); border-color:var(--primary); color:#fff;}
+  .opt .v{display:block; font-weight:700; font-size:.95rem;}
+  .extra-row{padding:11px 0; border-bottom:1px solid var(--line);}
+  .extra-row:last-child{border-bottom:none;}
+  .extra-q{font-size:.92rem; margin-bottom:7px;}
+  .chips{display:flex; gap:6px; flex-wrap:wrap;}
+  .chip{position:relative;}
+  .chip input{position:absolute; opacity:0; pointer-events:none;}
+  .chip span{display:inline-block; border:1px solid var(--line); border-radius:999px; padding:6px 13px; font-size:.85rem; cursor:pointer; background:#fff; color:var(--ink);}
+  .chip input:checked + span{background:var(--primary); border-color:var(--primary); color:#fff;}
+  .btnrow{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+  .btn{font-family:inherit; font-weight:700; font-size:.92rem; border-radius:999px; padding:11px 20px; cursor:pointer; border:1px solid transparent;}
+  .btn.primary{background:var(--primary); color:#fff;} .btn.primary:hover{background:var(--primary-dark);}
+  .btn.ghost{background:#fff; color:var(--ink); border-color:var(--line);} .btn.ghost:hover{border-color:var(--primary);}
+  .hist-empty{color:var(--muted); font-size:.92rem; padding:8px 2px;}
+  table.hist{border-collapse:collapse; width:100%; font-size:.86rem; margin-top:4px;}
+  table.hist th,table.hist td{text-align:left; padding:8px 9px; border-bottom:1px solid var(--line); white-space:nowrap;}
+  table.hist th{background:var(--soft, #f3f6f4); font-weight:700; color:var(--primary-dark);}
+  .del{background:none; border:none; color:#c0403f; cursor:pointer; font-size:1rem; font-weight:700;}
+  .store-warn{position:fixed; top:0; left:0; right:0; z-index:200; background:#b3261e; color:#fff; padding:12px 16px; font-size:.9rem; line-height:1.45; box-shadow:0 2px 10px rgba(0,0,0,.25); display:none;}
+  .store-warn.show{display:block;}
+  .store-warn .sw-inner{max-width:640px; margin:0 auto; display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px;}
+  .store-warn .sw-msg{flex:1; min-width:220px;}
+  .store-warn .sw-act{background:#fff; color:#b3261e; border:none; border-radius:999px; padding:7px 14px; font-weight:700; font-size:.85rem; cursor:pointer; font-family:inherit;}
+  .store-warn .sw-dismiss{background:transparent; color:#fff; border:1px solid rgba(255,255,255,.6); border-radius:999px; padding:7px 12px; font-weight:600; font-size:.85rem; cursor:pointer; font-family:inherit;}
+  @media (max-width:560px){ .grid{grid-template-columns:1fr;} }
+  @media print{ .moderow,.btnrow,.lead-note,.del,.backlink,.topbar,#histExportRow{display:none !important;} .card{break-inside:avoid;} }
+</style>
+</head>
+<body>
+<div class="store-warn" id="storeWarn" role="alert"></div>
+<div class="doc">
+  <div class="topbar">
+    <span class="kicker">Dr Aana Shah</span>
+    <a class="backlink" href="/">&#8592; Back to the tool</a>
+  </div>
+
+  <h1>ADHD treatment response tracker</h1>
+  <p class="lead">A simple way to track how ADHD medication is working, for children, teenagers, and young adults. It adds up the score for you, shows the response band, and keeps a record of past reviews. It stays on this device.</p>
+  <p class="hint" style="font-size:.85rem; color:var(--muted); margin:-8px 0 18px;"><b>When to use it:</b> fill it in for each medication review, rather than on a fixed schedule. Your prescriber may ask for it more often while the dose is being adjusted, and less often once things are settled.</p>
+
+  <div class="lead-note">
+    <b>Please read:</b> this is a record to share with your doctor, not a diagnosis or medical advice, and not a reason to change, start, or stop medication on your own. It is designed for children and young people. Always follow your prescriber's guidance. Nothing you enter here leaves your device.
+  </div>
+
+  <div class="moderow">
+    <div class="modeopt on" id="modeParent">Parent or carer<br><span style="font-weight:500; font-size:.8rem; color:var(--muted);">about your child</span></div>
+    <div class="modeopt" id="modeTeen">Teenager or young adult<br><span style="font-weight:500; font-size:.8rem; color:var(--muted);">about yourself</span></div>
+  </div>
+
+  <div class="card">
+    <h2>Details</h2>
+    <div class="grid">
+      <div class="field"><label for="fName" id="lblName">Name of child or young person</label><input type="text" id="fName"></div>
+      <div class="field"><label for="fAge">Age</label><input type="text" id="fAge"></div>
+      <div class="field"><label for="fGender">Gender</label><input type="text" id="fGender"></div>
+      <div class="field"><label for="fDate">Date of this review</label><input type="date" id="fDate"></div>
+      <div class="field"><label for="fBy" id="lblBy">Completed by</label><input type="text" id="fBy" placeholder="parent, carer, or other"></div>
+      <div class="field full"><label for="fSchool">School, college, or work</label><input type="text" id="fSchool"></div>
+      <div class="field"><label for="fMed">Current medication</label><input type="text" id="fMed" placeholder="e.g. methylphenidate"></div>
+      <div class="field"><label for="fDose">Dose per day</label><input type="text" id="fDose" placeholder="e.g. 30mg"></div>
+    </div>
+    <p class="hint" style="font-size:.8rem; color:var(--muted); margin:10px 0 0;">For each question, choose the option that best describes things. 0 = not at all, 3 = very much.</p>
+  </div>
+
+  <div class="card" id="cardAtt"></div>
+  <div class="card" id="cardHyp"></div>
+  <div class="card" id="cardOdd"></div>
+
+  <div class="card" id="cardTeen" style="display:none;">
+    <h2>A bit more (about you)</h2>
+    <div id="teenExtra"></div>
+    <div class="field full" style="margin-top:6px;">
+      <label>Three things I enjoy doing</label>
+      <input type="text" id="enjoy1" placeholder="1." style="margin-bottom:6px;">
+      <input type="text" id="enjoy2" placeholder="2." style="margin-bottom:6px;">
+      <input type="text" id="enjoy3" placeholder="3.">
+    </div>
+  </div>
+
+  <div class="btnrow">
+    <button class="btn primary" id="saveBtn">Save this review</button>
+    <button class="btn ghost" id="clearBtn">Clear the form</button>
+    <button class="btn ghost" onclick="window.print()">Print</button>
+  </div>
+
+  <div class="card" style="margin-top:22px;">
+    <h2>Saved reviews</h2>
+    <div id="histArea"></div>
+    <div class="btnrow" id="histExportRow">
+      <button class="btn ghost" id="backupBtn">Download backup</button>
+      <button class="btn ghost" id="restoreBtn">Restore backup</button>
+      <input type="file" id="backupFile" accept="application/json,.json" style="display:none;">
+    </div>
+    <p class="hint" style="font-size:.8rem; color:var(--muted); margin:8px 0 0;">Lower scores mean a better response. The backup file lets you move this history to another device or keep it safe.</p>
+  </div>
+
+  <nav class="docnav">
+    <div class="docnav-title">More from Dr Aana Shah</div>
+    <a href="understanding-adhd.html">Understanding ADHD<span>A plain-language guide to what your diagnosis means</span></a>
+    <a href="medication-tracker.html">Medication tracker<span>A daily log to bring to your reviews</span></a>
+    <a href="sensory-tools.html">Sensory &amp; attention tools<span>Low-cost ideas for focus and sensory regulation</span></a>
+    <a href="/">The planning and focus tool<span>Plan the day, break tasks down, focus in short bursts</span></a>
+  </nav>
+
+  <p class="pagefoot">Made by <a href="https://draanashah.com" rel="noopener">Dr Aana Shah</a> &middot; <a href="/">tools.draanashah.com</a><br>Scoring adapted from the Dundee ADHD Clinical Care Pathway (Coghill &amp; Seth, Child Adolesc Psychiatry Ment Health 2015;9:52).</p>
+</div>
+
+<script>
+"use strict";
+var KEY="adhdTRF.v1";
+var $=function(id){return document.getElementById(id);};
+var OPTS=["Not at all","Just a little","Quite a bit","Very much"];
+
+var ATT={parent:[
+  "Often fails to give close attention to details or makes careless mistakes in schoolwork or tasks",
+  "Often has difficulty sustaining attention in tasks or play activities",
+  "Often does not seem to listen when spoken to directly",
+  "Often does not follow through on instructions and fails to finish schoolwork, chores, or duties",
+  "Often has difficulty organizing tasks and activities",
+  "Often avoids, dislikes, or reluctantly engages in tasks requiring sustained mental effort",
+  "Often loses things necessary for activities (e.g. toys, school assignments, pencils, or books)",
+  "Often is distracted by extraneous stimuli",
+  "Often is forgetful in daily activities"
+],teen:[
+  "I often struggle to pay close attention to details, or make careless mistakes in my work, study, or tasks",
+  "I often have difficulty staying focussed on tasks or activities (long reading, lessons, work, games or sports, etc)",
+  "I often struggle to listen when spoken to directly (e.g. my mind seems elsewhere)",
+  "I often find it difficult to follow instructions and struggle to finish my work, study, or chores",
+  "I often find it hard organising tasks and activities (e.g. messy, not keeping things in order)",
+  "I often put off or dislike tasks that need lots of concentration",
+  "I often lose things I need for activities (e.g. assignments, pens, books, keys, phone, kit)",
+  "I am often distracted by things around me or my own thoughts (e.g. noise, someone moving, or thoughts)",
+  "I am often forgetful with daily routine or activities (e.g. taking lunch, returning calls, appointments)"
+]};
+var HYP={parent:[
+  "Often fidgets with hands or feet or squirms in seat",
+  "Often leaves seat in classroom or in other situations in which remaining seated is expected",
+  "Often runs about or climbs excessively in situations in which it is inappropriate",
+  "Often has difficulty playing or engaging in leisure activities quietly",
+  "Often is “on the go” or often acts as if “driven by a motor”",
+  "Often talks excessively",
+  "Often blurts out answers before questions have been completed",
+  "Often has difficulty awaiting turn",
+  "Often interrupts or intrudes on others (e.g. butts into conversations or games)"
+],teen:[
+  "I often fidget with my hands or feet, or I squirm in my seat",
+  "I often find it hard to stay in my seat when I am expected to sit down (e.g. in a class, a meeting, at the table, or a waiting room)",
+  "I often feel restless",
+  "I am often loud or noisy (e.g. in leisure or social activities)",
+  "I am often on the go or act as if “driven by a motor” (e.g. hard to stay still for long)",
+  "I often talk excessively",
+  "I often blurt out answers before the question is completed (e.g. struggle to wait my turn in conversation)",
+  "I often find it hard to wait my turn (e.g. waiting in a line or queue)",
+  "I often interrupt others (e.g. butt into conversations or games)"
+]};
+var ODD={parent:[
+  "Often loses temper",
+  "Often argues with adults",
+  "Often actively defies or refuses adult requests or rules",
+  "Often deliberately does things that annoy other people",
+  "Often blames others for his or her mistakes or misbehaviour",
+  "Often touchy or easily annoyed by others",
+  "Often is angry and resentful",
+  "Often is spiteful or vindictive",
+  "Often is quarrelsome"
+],teen:[
+  "I often lose my temper",
+  "I often argue with people in authority (e.g. parents, teachers, managers)",
+  "I often refuse requests or rules from people in authority",
+  "I often do things that annoy other people",
+  "I often blame other people for my mistakes or behaviour",
+  "I often get easily annoyed by others",
+  "I am often angry and frustrated",
+  "I often say things which can be hurtful",
+  "I am often confrontational"
+]};
+var SCALES=[
+  {k:"att", card:"cardAtt", title:"Attention", items:ATT, base:1},
+  {k:"hyp", card:"cardHyp", title:"Hyperactivity and impulsivity", items:HYP, base:10},
+  {k:"odd", card:"cardOdd", title:"Oppositional and defiant behaviour", items:ODD, base:19}
+];
+var rater="parent";
+
+function band(score){
+  if(score<=9)  return {l:"A", t:"Very good"};
+  if(score<=13) return {l:"B", t:"Good"};
+  if(score<=18) return {l:"C", t:"Not so good"};
+  return {l:"D", t:"Poor response"};
+}
+
+function renderScales(){
+  SCALES.forEach(function(s){
+    var items=s.items[rater];
+    var html='<div class="scale-head"><h2>'+s.title+'</h2><span class="subtotal" id="sub_'+s.k+'">0 / 27</span></div>';
+    items.forEach(function(q,i){
+      var n=s.base+i;
+      var opts=OPTS.map(function(o,v){
+        return '<label class="opt"><input type="radio" name="'+s.k+'_'+i+'" value="'+v+'"><span><span class="v">'+v+'</span>'+o+'</span></label>';
+      }).join("");
+      html+='<div class="item"><div class="item-q"><span class="n">'+n+'.</span>'+q+'</div><div class="opts">'+opts+'</div></div>';
+    });
+    $(s.card).innerHTML=html;
+    $(s.card).querySelectorAll('input[type="radio"]').forEach(function(r){ r.onchange=recompute; });
+  });
+}
+
+var TEEN_EXTRA=[
+  {id:"adhere", q:"I take my medication every day", opts:["Yes","No"]},
+  {id:"weekend", q:"I skip my medication on weekends", opts:["Yes","No"]},
+  {id:"forget", q:"I forget or don't take my medication", opts:["Sometimes","Often"]},
+  {id:"stopped", q:"I have stopped the medication", opts:["Yes","No"]},
+  {id:"helps", q:"I think my ADHD medication helps me calm down, focus better, and be less impulsive", opts:["Yes","No"]},
+  {id:"sidefx", q:"Side effects I notice", opts:["No side effects","I don't eat well","My sleep got worse","I feel different","Other"]},
+  {id:"sleephrs", q:"I usually manage to sleep for", opts:["2 to 4 hrs","5 to 7 hrs","8 to 10 hrs","More than 10 hrs"]},
+  {id:"sleepby", q:"I usually sleep by", opts:["10 pm","11 pm","Midnight","After 1 am"]}
+];
+function renderTeenExtra(){
+  var html="";
+  TEEN_EXTRA.forEach(function(e){
+    var chips=e.opts.map(function(o){ return '<label class="chip"><input type="radio" name="te_'+e.id+'" value="'+o+'"><span>'+o+'</span></label>'; }).join("");
+    html+='<div class="extra-row"><div class="extra-q">'+e.q+'</div><div class="chips">'+chips+'</div></div>';
+  });
+  $("teenExtra").innerHTML=html;
+}
+
+function recompute(){
+  SCALES.forEach(function(s){
+    var total=0;
+    s.items[rater].forEach(function(q,i){
+      var sel=document.querySelector('input[name="'+s.k+'_'+i+'"]:checked');
+      if(sel) total+=parseInt(sel.value,10);
+    });
+    var b=band(total);
+    $("sub_"+s.k).innerHTML=total+' / 27 <span class="band '+b.l+'">'+b.l+' &middot; '+b.t+'</span>';
+  });
+}
+
+function setRater(r){
+  rater=r;
+  $("modeParent").classList.toggle("on", r==="parent");
+  $("modeTeen").classList.toggle("on", r==="teen");
+  $("lblName").textContent = r==="teen" ? "Your name" : "Name of child or young person";
+  $("lblBy").textContent = r==="teen" ? "Completed by (you)" : "Completed by";
+  $("fBy").placeholder = r==="teen" ? "your name" : "parent, carer, or other";
+  $("cardTeen").style.display = r==="teen" ? "" : "none";
+  renderScales();
+  if(r==="teen" && !$("teenExtra").innerHTML) renderTeenExtra();
+  recompute();
+}
+
+function todayISO(){ var d=new Date(); return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
+function fmtDate(iso){ if(!iso) return ""; var p=iso.split("-"); return p[2]+"/"+p[1]+"/"+p[0]; }
+
+function load(){
+  var raw=null;
+  try{ raw=localStorage.getItem(KEY); return JSON.parse(raw)||[]; }
+  catch(e){
+    try{ if(raw) localStorage.setItem(KEY+".corrupt."+Date.now(), raw); }catch(_){}
+    showWarn("Some of your saved reviews could not be read, so the history started empty. A copy of the unreadable data has been kept on this device. If you have a backup file, you can restore it below.", null);
+    return [];
+  }
+}
+var saveWarned=false;
+function save(d){
+  try{ localStorage.setItem(KEY, JSON.stringify(d)); if(saveWarned){ saveWarned=false; hideWarn(); } return true; }
+  catch(e){ if(!saveWarned){ saveWarned=true; showWarn("Your reviews are not being saved on this device. You may be in private browsing, or storage may be full. Download a backup so you don't lose your history.", exportBackup); } return false; }
+}
+function showWarn(msg,onAction){
+  var bar=$("storeWarn");
+  bar.innerHTML='<div class="sw-inner"><span class="sw-msg"></span>'+(onAction?'<button class="sw-act" type="button">Download backup</button>':'')+'<button class="sw-dismiss" type="button">Dismiss</button></div>';
+  bar.querySelector(".sw-msg").textContent=msg;
+  if(onAction) bar.querySelector(".sw-act").onclick=onAction;
+  bar.querySelector(".sw-dismiss").onclick=function(){ bar.classList.remove("show"); };
+  bar.classList.add("show");
+}
+function hideWarn(){ var bar=$("storeWarn"); if(bar) bar.classList.remove("show"); }
+
+function collect(){
+  var scores={}, totals={};
+  for(var si=0; si<SCALES.length; si++){
+    var s=SCALES[si], arr=[], total=0, complete=true;
+    for(var i=0;i<9;i++){
+      var sel=document.querySelector('input[name="'+s.k+'_'+i+'"]:checked');
+      if(sel){ arr.push(parseInt(sel.value,10)); total+=parseInt(sel.value,10); } else { arr.push(null); complete=false; }
+    }
+    scores[s.k]=arr; totals[s.k]=total; totals[s.k+"_complete"]=complete;
+  }
+  var entry={
+    id:Date.now(), rater:rater, date:$("fDate").value||todayISO(),
+    name:$("fName").value.trim(), age:$("fAge").value.trim(),
+    gender:$("fGender").value.trim(), by:$("fBy").value.trim(), school:$("fSchool").value.trim(),
+    med:$("fMed").value.trim(), dose:$("fDose").value.trim(),
+    scores:scores, totals:totals
+  };
+  if(rater==="teen"){
+    var te={};
+    TEEN_EXTRA.forEach(function(e){ var sel=document.querySelector('input[name="te_'+e.id+'"]:checked'); te[e.id]=sel?sel.value:""; });
+    te.enjoy=[$("enjoy1").value.trim(),$("enjoy2").value.trim(),$("enjoy3").value.trim()];
+    entry.teen=te;
+  }
+  return entry;
+}
+
+function saveReview(){
+  var e=collect();
+  var anyComplete=SCALES.some(function(s){ return e.totals[s.k+"_complete"]; });
+  if(!anyComplete){ alert("Please answer at least one section before saving."); return; }
+  var data=load();
+  data.push(e);
+  data.sort(function(a,b){ return a.date<b.date?1:(a.date>b.date?-1:b.id-a.id); });
+  save(data); renderHistory();
+  alert("Review saved. You can see it in Saved reviews below.");
+}
+
+function clearForm(){
+  document.querySelectorAll('input[type="radio"]').forEach(function(r){ r.checked=false; });
+  ["fName","fAge","fGender","fBy","fSchool","fMed","fDose","enjoy1","enjoy2","enjoy3"].forEach(function(id){ if($(id)) $(id).value=""; });
+  $("fDate").value=todayISO();
+  recompute();
+}
+
+function renderHistory(){
+  var data=load();
+  var area=$("histArea");
+  area.textContent="";
+  if(!data.length){ area.innerHTML='<div class="hist-empty">No reviews saved yet. Fill in the form above and save your first one.</div>'; return; }
+
+  var rows=data.map(function(e){
+    function cell(k){ var v=e.totals[k]; var b=band(v||0); return '<td>'+(v||0)+' <span class="band '+b.l+'">'+b.l+'</span></td>'; }
+    return '<tr><td>'+fmtDate(e.date)+'</td><td>'+(e.rater==="teen"?"Teen":"Parent")+'</td>'+cell("att")+cell("hyp")+cell("odd")+'<td><button class="del" title="Delete" data-id="'+e.id+'">&times;</button></td></tr>';
+  }).join("");
+  area.innerHTML='<table class="hist"><thead><tr><th>Date</th><th>By</th><th>Attn</th><th>Hyp</th><th>Opp</th><th></th></tr></thead><tbody>'+rows+'</tbody></table>';
+  area.querySelectorAll(".del").forEach(function(b){ b.onclick=function(){ if(confirm("Delete this review?")){ var d=load().filter(function(x){return x.id!=b.dataset.id;}); save(d); renderHistory(); } }; });
+}
+
+function exportBackup(){
+  var blob=new Blob([JSON.stringify({app:"adhdTRF", version:1, exported:todayISO(), entries:load()}, null, 2)], {type:"application/json"});
+  var url=URL.createObjectURL(blob);
+  var a=document.createElement("a"); a.href=url; a.download="adhd-treatment-response-backup-"+todayISO()+".json";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+}
+function importBackup(ev){
+  var file=ev.target.files[0]; if(!file) return;
+  var reader=new FileReader();
+  reader.onload=function(){
+    var parsed;
+    try{ parsed=JSON.parse(reader.result); }catch(e){ alert("That file doesn't look like a backup from this tool."); ev.target.value=""; return; }
+    var entries = parsed && Array.isArray(parsed.entries) ? parsed.entries : (Array.isArray(parsed)?parsed:null);
+    if(!entries){ alert("That file doesn't look like a backup from this tool."); ev.target.value=""; return; }
+    if(confirm("Restoring will replace the current history ("+load().length+" reviews) with the backup ("+entries.length+" reviews). Continue?")){ save(entries); renderHistory(); }
+    ev.target.value="";
+  };
+  reader.readAsText(file);
+}
+
+$("modeParent").onclick=function(){ setRater("parent"); };
+$("modeTeen").onclick=function(){ setRater("teen"); };
+$("saveBtn").onclick=saveReview;
+$("clearBtn").onclick=clearForm;
+$("backupBtn").onclick=exportBackup;
+$("restoreBtn").onclick=function(){ $("backupFile").click(); };
+$("backupFile").onchange=importBackup;
+
+$("fDate").value=todayISO();
+setRater("parent");
+renderHistory();
+</script>
+<script data-goatcounter="https://draanashah.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
+</body>
+</html>
